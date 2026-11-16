@@ -3,7 +3,7 @@
 <head>
 <base target="_top">
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-JZpkxadFHE+WFw2HNmKgq3EHyz1G1hV2ncrrip/ww3g=' https://cdn.jsdelivr.net/npm/echarts@5.5.1/; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-CD3lEDVxeHkRSK3qutmm1KSMnH3j3Z0be7WaR1cdwVM=' https://cdn.jsdelivr.net/npm/echarts@5.5.1/; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sentimentos</title>
 <meta name="referrer" content="no-referrer">
@@ -20,25 +20,35 @@
     --borda: #dcdfe4;
     --primaria: #33607f;
     --primaria-texto: #ffffff;
-    --pew-bg: #eff2f5;
     --erro: #8f1f10;
+    --ok: #1a7a3c;
     --linha-alt: #f3f5f8;
     --vidro: rgba(255, 255, 255, .72);
     --vidro-borda: rgba(255, 255, 255, .6);
+    /* gráficos (lidos também pelo JS para o ECharts) */
+    --fig-bg: #eff2f5; --fig-texto: #222222; --fig-sub: #58585a;
+    --fig-grade: rgba(0, 0, 0, .35); --fig-trilho: #d6d6d6;
+    --fig-meta: #8f1f10; --fig-azul: #33607f; --fig-roxo: #762a83;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #15181c; --superficie: #1f2329; --texto: #e6e6e6; --texto-sec: #a9adb3;
       --borda: #343a42; --primaria: #7fa8c6; --primaria-texto: #10151a;
-      --erro: #ff8a7a; --linha-alt: #252a31;
+      --erro: #ff8a7a; --ok: #6fcf8f; --linha-alt: #252a31;
       --vidro: rgba(22, 24, 34, .7); --vidro-borda: rgba(255, 255, 255, .14);
+      --fig-bg: #1b1f25; --fig-texto: #e3e5e8; --fig-sub: #a3a8b0;
+      --fig-grade: rgba(255, 255, 255, .22); --fig-trilho: #3b424d;
+      --fig-meta: #ff8a7a; --fig-azul: #6f9fc4; --fig-roxo: #c08ad0;
     }
   }
   :root[data-theme="dark"] {
     --bg: #15181c; --superficie: #1f2329; --texto: #e6e6e6; --texto-sec: #a9adb3;
     --borda: #343a42; --primaria: #7fa8c6; --primaria-texto: #10151a;
-    --erro: #ff8a7a; --linha-alt: #252a31;
+    --erro: #ff8a7a; --ok: #6fcf8f; --linha-alt: #252a31;
     --vidro: rgba(22, 24, 34, .7); --vidro-borda: rgba(255, 255, 255, .14);
+    --fig-bg: #1b1f25; --fig-texto: #e3e5e8; --fig-sub: #a3a8b0;
+    --fig-grade: rgba(255, 255, 255, .22); --fig-trilho: #3b424d;
+    --fig-meta: #ff8a7a; --fig-azul: #6f9fc4; --fig-roxo: #c08ad0;
   }
 
   * { box-sizing: border-box; }
@@ -83,13 +93,29 @@
 
   /* Cartões dos gráficos: fundo Pew fixo (claro) nos dois temas, como no painel Julia */
   .fig {
-    margin: 0; background: var(--pew-bg); color: #222; border-radius: 8px;
+    margin: 0; background: var(--fig-bg); color: var(--fig-texto); border-radius: 8px;
     padding: 18px 18px 12px; min-width: 0;
   }
-  .fig h2 { font-size: 19px; color: #222; }
-  .fig .sub { font: italic 15px Georgia, serif; color: #58585a; margin: 4px 0 6px; }
-  .fig .fonte { font-size: 12px; color: #58585a; margin: 6px 0 0; }
-  .fig .vazio { color: #58585a; padding: 40px 0; text-align: center; }
+  .fig h2 { font-size: 19px; color: var(--fig-texto); }
+  .fig .sub { font: italic 15px Georgia, serif; color: var(--fig-sub); margin: 4px 0 6px; }
+  .fig .fonte { font-size: 12px; color: var(--fig-sub); margin: 6px 0 0; }
+  .fig .vazio { color: var(--fig-sub); padding: 40px 0; text-align: center; }
+
+  /* comparação com o período anterior */
+  .kpi .var { display: block; font-size: 13px; margin-top: 4px; color: var(--texto-sec); }
+  .kpi .var.melhor { color: var(--ok); }
+  .kpi .var.pior { color: var(--erro); }
+
+  /* barra da tabela: busca + exportar; aviso do filtro vindo do gráfico */
+  .barra-tabela { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
+  .barra-tabela input[type="search"] { flex: 1 1 260px; max-width: 420px; }
+  .filtro-grafico {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 10px;
+    background: var(--linha-alt); border: 1px solid var(--borda); border-radius: 999px;
+    padding: 4px 6px 4px 12px; font-size: 14px;
+  }
+  .filtro-grafico button { padding: 2px 10px; border-radius: 999px; }
+  .dica { font-size: 13px; color: var(--texto-sec); margin: 10px 0 0; }
   .grafico { width: 100%; height: 400px; }
   .mt { margin-top: 16px; }
 
@@ -213,7 +239,7 @@
 
   <main id="painel" hidden>
     <section class="kpis">
-      <div class="kpi"><b id="kpi-total">0</b><span>Total de registros</span></div>
+      <div class="kpi"><b id="kpi-total">0</b><span>Total de registros</span><small class="var" id="kpi-var"></small></div>
       <p class="escopo" id="escopo"></p>
     </section>
 
@@ -230,9 +256,15 @@
 
     <section class="card">
       <h2>Registros</h2>
-      <div class="mt">
-        <input type="search" id="busca" placeholder="Buscar (nome, motivo, setor…)" style="width:min(100%,420px)">
+      <div class="barra-tabela">
+        <input type="search" id="busca" placeholder="Buscar (nome, motivo, setor…)" aria-label="Buscar nos registros">
+        <button id="btn-exportar" class="secundario" title="Baixa os registros desta tabela (com filtros e busca) para abrir no Excel">⤓ Baixar para Excel</button>
       </div>
+      <div id="filtro-grafico" class="filtro-grafico" hidden>
+        <span>Filtro do gráfico: <strong id="filtro-rotulo"></strong></span>
+        <button id="btn-limpar-filtro" class="secundario" title="Remover este filtro">✕</button>
+      </div>
+      <p class="dica" id="dica-grafico">Dica: clique num ponto, barra ou nome dos gráficos abaixo para ver só aqueles registros aqui.</p>
       <div class="tabela-wrap">
         <table id="tabela"><thead></thead><tbody></tbody></table>
       </div>
@@ -327,7 +359,17 @@ const E = {
   cfg: null, codigo: null, dados: null,
   periodo: 'Tudo', pessoa: 'Todas', busca: '', pagina: 0, extras: false,
   filtradas: [],
+  filtroGrafico: null,   // { rotulo, teste(r) } vindo do clique num gráfico
 };
+
+// Cores dos gráficos que mudam com o tema: lidas das variáveis CSS (--fig-*)
+function coresDoTema() {
+  const cs = getComputedStyle(document.documentElement);
+  const v = (n) => cs.getPropertyValue(n).trim();
+  PEW.text = v('--fig-texto'); PEW.sub = v('--fig-sub'); PEW.fundo = v('--fig-bg');
+  PEW.grade = v('--fig-grade'); PEW.trilho = v('--fig-trilho');
+  PEW.meta = v('--fig-meta'); PEW.blue = v('--fig-azul'); PEW.roxo = v('--fig-roxo');
+}
 const charts = {};
 const $ = (id) => document.getElementById(id);
 
@@ -443,12 +485,12 @@ async function entrar(codigo) {
 }
 
 function sair(msg, erro) {
-  E.codigo = null; E.dados = null; E.pessoa = 'Todas';
+  E.codigo = null; E.dados = null; E.pessoa = 'Todas'; E.filtroGrafico = null;
   gravarSessao(null);
   Object.keys(charts).forEach((k) => { charts[k].dispose(); delete charts[k]; });
   E.filtradas = [];
   $('tabela').tBodies[0].textContent = '';
-  ['kpi-total', 'ac-usuarios', 'ac-hoje', 'ac-semana', 'ac-mes', 'ac-lista', 'escopo'].forEach((id) => { $(id).textContent = ''; });
+  ['kpi-total', 'kpi-var', 'ac-usuarios', 'ac-hoje', 'ac-semana', 'ac-mes', 'ac-lista', 'escopo'].forEach((id) => { $(id).textContent = ''; });
   $('sel-pessoa').textContent = '';
   $('painel').hidden = true;
   $('ctl-painel').hidden = true;
@@ -551,12 +593,64 @@ function render() {
   $('t-pessoas').textContent = sic ? 'Ocorrências por recepcionista' : 'Registros por pessoa (quem recebeu)';
   $('f-pessoas').textContent = sic ? FONTE_SIC : FONTE_EQ;
 
+  renderComparacao();
+  desenharGraficos(L);
+
+  E.filtradas = L;
+  E.pagina = 0;
+  renderTabela();
+}
+
+function desenharGraficos(L) {
+  const sic = E.dados.tipo === 'sicase';
+  coresDoTema();
   desenhar('serie', opcaoSerie(L));
   if (!sic) desenhar('stack', opcaoStack(L));
   if (!sic && E.extras) desenharDumbbell(L);
   desenhar('pessoas', opcaoPessoas(L));
+}
 
-  E.filtradas = L;
+// ── Comparação com o período anterior (mesmo tamanho de janela) ──
+function contarEntre(L, ini, fim) {   // ini inclusivo, fim exclusivo (yyyy-mm-dd)
+  return L.filter((r) => r.d && r.d >= ini && r.d < fim).length;
+}
+function renderComparacao() {
+  const el = $('kpi-var');
+  el.className = 'var';
+  el.textContent = '';
+  let L = E.dados.linhas;
+  if (podeFiltrarPessoa() && E.pessoa !== 'Todas') L = L.filter((r) => r.nome === E.pessoa);
+  const dias = E.periodo === '90 dias' ? 90 : 30;
+  const amanha = ymd(addDias(hoje(), 1));
+  const lim = ymd(addDias(hoje(), -dias));
+  const limAnt = ymd(addDias(hoje(), -2 * dias));
+  const atual = contarEntre(L, lim, amanha);
+  const anterior = contarEntre(L, limAnt, lim);
+  const prefixo = E.periodo === 'Tudo' ? 'Últimos 30 dias: ' + atual.toLocaleString('pt-BR') + ' · ' : '';
+  if (!anterior) {
+    el.textContent = prefixo + 'sem registros nos ' + dias + ' dias anteriores';
+    return;
+  }
+  const varp = Math.round(100 * (atual - anterior) / anterior);
+  const seta = varp > 0 ? '▲' : varp < 0 ? '▼' : '=';
+  el.textContent = prefixo + seta + ' ' + Math.abs(varp) + '% vs. ' + dias + ' dias anteriores (' +
+    anterior.toLocaleString('pt-BR') + ')';
+  // menos equívocos é melhor
+  if (varp < 0) el.classList.add('melhor');
+  if (varp > 0) el.classList.add('pior');
+}
+
+// ── Clique nos gráficos → filtra a tabela ──
+const acoesGrafico = {};   // nome → { clique(params), pixel(chart, [x, y]) }
+
+function filtrarPorGrafico(rotulo, teste) {
+  E.filtroGrafico = { rotulo: rotulo, teste: teste };
+  E.pagina = 0;
+  renderTabela();
+  $('filtro-grafico').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function limparFiltroGrafico() {
+  E.filtroGrafico = null;
   E.pagina = 0;
   renderTabela();
 }
@@ -564,6 +658,7 @@ function render() {
 function desenhar(nome, res) {
   const el = $('ch-' + nome);
   const vazio = $('v-' + nome);
+  acoesGrafico[nome] = res && res.acoes ? res.acoes : null;
   if (!res) {
     if (charts[nome]) { charts[nome].dispose(); delete charts[nome]; }
     el.hidden = true; vazio.hidden = false;
@@ -571,7 +666,18 @@ function desenhar(nome, res) {
   }
   el.hidden = false; vazio.hidden = true;
   if (res.altura) el.style.height = res.altura + 'px';
-  if (!charts[nome]) charts[nome] = echarts.init(el, null, { renderer: 'svg' });
+  if (!charts[nome]) {
+    const c = echarts.init(el, null, { renderer: 'svg' });
+    charts[nome] = c;
+    c.on('click', (p) => { const a = acoesGrafico[nome]; if (a && a.clique) a.clique(p); });
+    // clique na área vazia da coluna/linha (fora do ponto ou barra)
+    c.getZr().on('click', (ev) => {
+      if (ev.target) return;
+      const a = acoesGrafico[nome];
+      const px = [ev.offsetX, ev.offsetY];
+      if (a && a.pixel && c.containPixel('grid', px)) a.pixel(c, px);
+    });
+  }
   charts[nome].setOption(res.opcao, true);
   charts[nome].resize();
 }
@@ -586,11 +692,11 @@ function base(extra) {
     textStyle: { fontFamily: FONTE, color: PEW.text },
   }, extra);
 }
-const eixoValor = {
+const eixoValor = () => ({
   type: 'value',
   axisLabel: { fontSize: 13, color: PEW.text },
-  splitLine: { lineStyle: { type: 'dotted', color: 'rgba(0,0,0,.35)' } },
-};
+  splitLine: { lineStyle: { type: 'dotted', color: PEW.grade } },
+});
 const fmtNum = (v) => v == null ? '' : (+v).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 
 // ── Figura 1: registros/semana + média móvel + meta + variação % ──
@@ -627,14 +733,25 @@ function opcaoSerie(L) {
   const linha = (cor, larg) => ({
     type: 'line', symbol: 'circle', symbolSize: 10, color: cor,
     lineStyle: { color: cor, width: larg },
-    itemStyle: { color: '#fff', borderColor: cor, borderWidth: 2.5 },
+    itemStyle: { color: PEW.fundo, borderColor: cor, borderWidth: 2.5 },
   });
 
+  const porSemana = (i) => {
+    if (i == null || i < 0 || i >= semanas.length) return;
+    const ini = semanas[i];
+    const fim = ymd(addDias(parseYmd(ini), 7));
+    filtrarPorGrafico('semana de ' + ddmm(ini), (r) => r.d && r.d >= ini && r.d < fim);
+  };
+
   return {
+    acoes: {
+      clique: (p) => { if (p.componentType === 'series') porSemana(p.dataIndex); },
+      pixel: (c, px) => porSemana(c.convertFromPixel({ seriesIndex: 0 }, px)[0]),
+    },
     opcao: base({
       grid: { left: 8, right: 16, top: 44, bottom: 8, containLabel: true },
       legend: {
-        top: 0, icon: 'rect', itemWidth: 14, itemHeight: 14, textStyle: { fontSize: 13 },
+        top: 0, icon: 'rect', itemWidth: 14, itemHeight: 14, textStyle: { fontSize: 13, color: PEW.text },
         data: [
           { name: 'Registros/semana', itemStyle: { color: PEW.gray } },
           { name: 'Média móvel 4 sem.', itemStyle: { color: PEW.red } },
@@ -647,7 +764,7 @@ function opcaoSerie(L) {
         axisLine: { lineStyle: { color: PEW.text } },
         axisLabel: { fontSize: 13, color: PEW.text, hideOverlap: true },
       },
-      yAxis: Object.assign({}, eixoValor, { min: 0, max: Math.ceil(ymax) }),
+      yAxis: Object.assign(eixoValor(), { min: 0, max: Math.ceil(ymax) }),
       series: [
         Object.assign(linha(PEW.gray, 3.5), { name: 'Registros/semana', data: n }),
         Object.assign(linha(PEW.red, 4.5), { name: 'Média móvel 4 sem.', data: mmItens, z: 3 }),
@@ -687,18 +804,31 @@ function opcaoStack(L) {
       name: t, type: 'bar', stack: 'total', barWidth: '72%', color: cor,
       data: meses.map((m) => +(100 * (tab[m + '|' + t] || 0) / totMes[m]).toFixed(1)),
       label: {
-        show: true, fontSize: 12, color: claro ? PEW.text : '#fff',
+        show: true, fontSize: 12, color: claro ? '#222' : '#fff',
         formatter: (p) => p.value >= 4 ? Math.round(p.value) : '',
       },
     };
   });
 
+  const porMes = (i, tipo) => {
+    if (i == null || i < 0 || i >= meses.length) return;
+    const m = meses[i];
+    if (!tipo) { filtrarPorGrafico('mês ' + mmaa(m), (r) => r.d && r.d.slice(0, 7) === m); return; }
+    const outros = tipo === OUTROS_TIPOS;
+    filtrarPorGrafico(tipo + ' em ' + mmaa(m), (r) => r.d && r.d.slice(0, 7) === m && r.tipo_erro &&
+      (outros ? !principais.has(r.tipo_erro) : r.tipo_erro === tipo));
+  };
+
   return {
     altura: 480,
+    acoes: {
+      clique: (p) => { if (p.componentType === 'series') porMes(p.dataIndex, p.seriesName); },
+      pixel: (c, px) => porMes(c.convertFromPixel({ seriesIndex: 0 }, px)[0]),
+    },
     opcao: base({
       grid: { left: 8, right: 8, top: 96, bottom: 8, containLabel: true },
       legend: { type: 'plain', top: 0, left: 0, right: 0, icon: 'rect', itemWidth: 14, itemHeight: 14,
-                itemGap: 12, textStyle: { fontSize: 13 } },   // quebra em várias linhas
+                itemGap: 12, textStyle: { fontSize: 13, color: PEW.text } },   // quebra em várias linhas
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, valueFormatter: (v) => fmtNum(v) + '%' },
       xAxis: {
         type: 'category', data: meses.map(mmaa), axisTick: { show: false },
@@ -748,9 +878,22 @@ function opcaoDumbbell(L) {
     label: { formatter: 'MÉDIA', position: 'end', color: cor, fontSize: 11 },
   });
 
+  const porMesTipo = (i, tipo) => {
+    if (i == null || i < 0 || i >= meses.length) return;
+    const m = meses[i];
+    if (!tipo) { filtrarPorGrafico('mês ' + mmaa(m), (r) => r.d && r.d.slice(0, 7) === m); return; }
+    filtrarPorGrafico(tipo + ' em ' + mmaa(m), (r) => r.d && r.d.slice(0, 7) === m && r.tipo_erro === tipo);
+  };
+
   return {
     tA: tA, tB: tB,
     altura: Math.min(Math.max(140 + 40 * meses.length, 320), 1100),
+    acoes: {
+      clique: (p) => {
+        if (p.componentType === 'series' && p.seriesType === 'scatter') porMesTipo(p.value[1], p.seriesName);
+      },
+      pixel: (c, px) => porMesTipo(c.convertFromPixel({ seriesIndex: 1 }, px)[1]),
+    },
     opcao: base({
       grid: { left: 8, right: 24, top: 28, bottom: 8, containLabel: true },
       tooltip: {
@@ -760,7 +903,7 @@ function opcaoDumbbell(L) {
           return mmaa(meses[i]) + '<br>' + esc(tA) + ': <b>' + xA[i] + '</b><br>' + esc(tB) + ': <b>' + xB[i] + '</b>';
         },
       },
-      xAxis: Object.assign({}, eixoValor, { min: 0, max: Math.ceil(xmax * 1.12), splitLine: { show: false },
+      xAxis: Object.assign(eixoValor(), { min: 0, max: Math.ceil(xmax * 1.12), splitLine: { show: false },
         axisLine: { show: true, lineStyle: { color: PEW.text } } }),
       yAxis: {
         type: 'category', inverse: true, data: meses.map(mmaa),
@@ -778,7 +921,7 @@ function opcaoDumbbell(L) {
             return {
               type: 'group', children: [
                 { type: 'line', shape: { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1] },
-                  style: { stroke: '#d6d6d6', lineWidth: 10, lineCap: 'round' } },
+                  style: { stroke: PEW.trilho, lineWidth: 10, lineCap: 'round' } },
                 { type: 'text', style: {
                   text: 'Δ ' + api.value(3), x: (p1[0] + p2[0]) / 2, y: p1[1] - 9,
                   align: 'center', verticalAlign: 'bottom', fill: PEW.sub, font: '12px ' + FONTE } },
@@ -806,14 +949,26 @@ function opcaoPessoas(L) {
   const cp = contar(L.filter((r) => r.nome), 'nome');
   if (!cp.length) return null;
   const max = cp[0][1];
+  const rotuloPessoa = E.dados.tipo === 'sicase' ? 'recepcionista ' : '';
+  const porPessoa = (nome) => {
+    if (!nome) return;
+    filtrarPorGrafico(rotuloPessoa + nome, (r) => r.nome === nome);
+  };
   return {
     altura: Math.min(Math.max(40 + 24 * cp.length, 200), 2400),
+    acoes: {
+      clique: (p) => {
+        if (p.componentType === 'series') porPessoa(p.name);
+        else if (p.componentType === 'yAxis') porPessoa(p.value);
+      },
+      pixel: (c, px) => { const i = c.convertFromPixel({ seriesIndex: 0 }, px)[1]; if (cp[i]) porPessoa(cp[i][0]); },
+    },
     opcao: base({
       grid: { left: 8, right: 40, top: 8, bottom: 8, containLabel: true },
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
       xAxis: { type: 'value', show: false, max: Math.ceil(max * 1.15) },
       yAxis: {
-        type: 'category', inverse: true, data: cp.map((x) => x[0]),
+        type: 'category', inverse: true, data: cp.map((x) => x[0]), triggerEvent: true,
         axisTick: { show: false }, axisLine: { show: false },
         axisLabel: { fontSize: 13, color: PEW.text, interval: 0 },   // todos os nomes
       },
@@ -829,6 +984,42 @@ function opcaoPessoas(L) {
 // ══════════════════════════════════════════════════════════════
 // Tabela com busca e paginação
 // ══════════════════════════════════════════════════════════════
+// Linhas que a tabela mostra: período/pessoa + filtro do gráfico + busca
+function linhasTabela() {
+  const cols = COLUNAS[E.dados.tipo];
+  let linhas = E.filtradas;
+  if (E.filtroGrafico) linhas = linhas.filter(E.filtroGrafico.teste);
+  const termo = normalizar(E.busca);
+  if (termo) linhas = linhas.filter((r) => cols.some((c) => normalizar(r[c[0]]).indexOf(termo) >= 0));
+  return linhas;
+}
+
+// ── Exportar para Excel (CSV com ; e BOM, que o Excel em português abre direto) ──
+function celulaCsv(v) {
+  let s = String(v == null ? '' : v);
+  // evita "CSV injection": célula que começa com = + - @ viraria fórmula no Excel
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return '"' + s.replace(/"/g, '""') + '"';
+}
+function exportarCsv() {
+  const cols = COLUNAS[E.dados.tipo];
+  const linhas = linhasTabela();
+  if (!linhas.length) return;
+  const csv = [cols.map((c) => celulaCsv(c[1])).join(';')]
+    .concat(linhas.map((r) => cols.map((c) => celulaCsv(r[c[0]])).join(';')))
+    .join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const nomeSetor = normalizar(E.dados.rotulo).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  a.href = url;
+  a.download = 'sentimentos-' + (nomeSetor || 'registros') + '-' + ymd(new Date()) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
 function renderTabela() {
   const cols = COLUNAS[E.dados.tipo];
   const thead = $('tabela').tHead;
@@ -836,10 +1027,12 @@ function renderTabela() {
   const trh = thead.insertRow();
   cols.forEach((c) => { const th = document.createElement('th'); th.textContent = c[1]; trh.appendChild(th); });
 
-  const termo = normalizar(E.busca);
-  const linhas = termo
-    ? E.filtradas.filter((r) => cols.some((c) => normalizar(r[c[0]]).indexOf(termo) >= 0))
-    : E.filtradas;
+  const linhas = linhasTabela();
+  const fg = E.filtroGrafico;
+  $('filtro-grafico').hidden = !fg;
+  $('dica-grafico').hidden = !!fg;
+  $('filtro-rotulo').textContent = fg ? fg.rotulo : '';
+  $('btn-exportar').disabled = !linhas.length;
 
   const paginas = Math.max(1, Math.ceil(linhas.length / POR_PAGINA));
   E.pagina = Math.min(E.pagina, paginas - 1);
@@ -1068,6 +1261,8 @@ $('busca').addEventListener('input', (ev) => {
   clearTimeout(espera);
   espera = setTimeout(() => { E.busca = ev.target.value; E.pagina = 0; renderTabela(); }, 300);
 });
+$('btn-exportar').addEventListener('click', exportarCsv);
+$('btn-limpar-filtro').addEventListener('click', limparFiltroGrafico);
 $('pg-ant').addEventListener('click', () => { E.pagina--; renderTabela(); });
 $('pg-prox').addEventListener('click', () => { E.pagina++; renderTabela(); });
 
@@ -1078,7 +1273,15 @@ $('btn-tema').addEventListener('click', () => {
   const novo = atual === 'dark' ? 'light' : 'dark';
   root.setAttribute('data-theme', novo);
   try { localStorage.setItem('tema', novo); } catch (e) { /* ignora */ }
+  redesenharNoTema();
 });
+
+// gráficos acompanham o tema (botão ou mudança do sistema)
+function redesenharNoTema() { if (E.dados && !$('painel').hidden) desenharGraficos(E.filtradas); }
+if (window.matchMedia) {
+  const mq = matchMedia('(prefers-color-scheme: dark)');
+  (mq.addEventListener ? mq.addEventListener.bind(mq, 'change') : mq.addListener.bind(mq))(redesenharNoTema);
+}
 
 iniciar();
 </script>
