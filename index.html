@@ -139,10 +139,11 @@
      URL absoluta para valer também quando a página é servida pelo Apps Script. */
   body.login { background: #5b4a8a; overflow: hidden; }
   body.login::before {          /* foto com aproximação lenta (efeito Ken Burns) */
-    content: ''; position: fixed; inset: -2%; z-index: 0;
+    content: ''; position: fixed; inset: 0; z-index: 0;
     background: #5b4a8a url('https://2ripetrolina.github.io/dashboard-protocolos/fundo-login.webp') 62% 45% / cover no-repeat;
     animation: kenburns 48s ease-in-out infinite alternate;
     will-change: transform;
+    backface-visibility: hidden;   /* evita borrão de reamostragem durante a animação */
   }
   body.login::after {           /* brilho do pôr do sol pulsando + vinheta */
     content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
@@ -154,7 +155,7 @@
   }
   @keyframes kenburns {
     from { transform: scale(1) translate3d(0, 0, 0); }
-    to   { transform: scale(1.07) translate3d(-1.2%, -.8%, 0); }
+    to   { transform: scale(1.035) translate3d(-.8%, -.5%, 0); }   /* zoom leve: a foto tem só 1672 px */
   }
   @keyframes brilho { from { opacity: .55; } to { opacity: 1; } }
   #vfx { display: none; }
