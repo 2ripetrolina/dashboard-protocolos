@@ -1,4 +1,4 @@
-# Dashboard de Protocolos
+# Sentimentos
 
 Painel de equívocos e de guias SICASE da equipe.
 
