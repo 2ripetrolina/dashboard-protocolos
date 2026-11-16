@@ -3,7 +3,7 @@
 <head>
 <base target="_top">
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-W7+xn0Gr2XdLFvw/+ttOo6kX6HFkR74o47RRPAwOnr8=' https://cdn.jsdelivr.net/npm/echarts@5.5.1/; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-FoiGdDPJgJVLWg2DCoioj2+ToZbYSx63BUAc50UsOqQ=' https://cdn.jsdelivr.net/npm/echarts@5.5.1/; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sentimentos</title>
 <meta name="referrer" content="no-referrer">
@@ -1442,6 +1442,123 @@ const VFX = (() => {
     };
   }
 
+  // ── Sol e reflexo na água, presos à foto do fundo ──
+  // Posições em fração da imagem (u = x/largura, v = y/altura), medidas na foto
+  // "Rádio azul ao entardecer" (1672×941). Se trocar o fundo, remeça estes valores.
+  const FOTO = { w: 1672, h: 941, posX: .74, posY: .60 };   // mesmo background-position do CSS
+  const SOL = { u: .311, v: .580, raio: .0586 };            // raio em fração da largura
+  const AGUA = { u: .312, topo: .692, fundo: .83 };         // coluna do reflexo (até onde começa a vegetação)
+  let G = null, brilhos = [];
+  const fundoAntes = () => getComputedStyle(document.body, '::before');
+
+  // geometria do "cover" + a transformação atual do Ken Burns (lida do CSS)
+  function geometria() {
+    const s = Math.max(W / FOTO.w, H / FOTO.h);
+    const dw = FOTO.w * s, dh = FOTO.h * s;
+    let m = [1, 0, 0, 1, 0, 0];
+    const tr = fundoAntes().transform;
+    if (tr && tr !== 'none') {
+      const nums = tr.match(/-?[\d.]+(e-?\d+)?/g);
+      if (nums && nums.length >= 6) m = nums.slice(0, 6).map(Number);
+    }
+    G = { dw: dw, dh: dh, ox: (W - dw) * FOTO.posX, oy: (H - dh) * FOTO.posY, m: m,
+          esc: Math.hypot(m[0], m[1]) };
+  }
+  function naTela(u, v) {
+    const x = G.ox + u * G.dw - W / 2, y = G.oy + v * G.dh - H / 2, m = G.m;
+    return [m[0] * x + m[2] * y + m[4] + W / 2, m[1] * x + m[3] * y + m[5] + H / 2];
+  }
+  function novoBrilho() {
+    const k = Math.pow(Math.random(), 1.25);                 // 0 = horizonte, 1 = perto da praia
+    const espalha = .008 + k * .045;
+    const gauss = (Math.random() + Math.random() + Math.random() - 1.5) / 1.5;
+    return {
+      k: k, u: AGUA.u + gauss * espalha, v: AGUA.topo + k * (AGUA.fundo - AGUA.topo),
+      comp: .004 + Math.random() * .012 + k * .018, vida: 0, dur: rnd(.35, 1.1),
+    };
+  }
+
+  function desenharSol(seg, dt) {
+    geometria();
+    const esc = G.esc;
+    const [sx, sy] = naTela(SOL.u, SOL.v);
+    const R = SOL.raio * G.dw * esc;
+    const horizonte = naTela(SOL.u, AGUA.topo - .004)[1];
+    const pulso = .5 + .5 * Math.sin(seg * 2 * Math.PI / 7);
+
+    // halo quente pulsando
+    let gr = ctx.createRadialGradient(sx, sy, R * .8, sx, sy, R * 4.4);
+    gr.addColorStop(0, 'rgba(255,236,190,' + (.34 + .16 * pulso) + ')');
+    gr.addColorStop(.35, 'rgba(255,190,150,' + (.10 + .05 * pulso) + ')');
+    gr.addColorStop(1, 'rgba(255,150,170,0)');
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = gr;
+    ctx.fillRect(sx - R * 4.5, sy - R * 4.5, R * 9, R * 9);
+
+    // núcleo luminoso
+    gr = ctx.createRadialGradient(sx, sy, 0, sx, sy, R * 1.25);
+    gr.addColorStop(0, 'rgba(255,252,232,' + (.22 + .1 * pulso) + ')');
+    gr.addColorStop(1, 'rgba(255,240,200,0)');
+    ctx.fillStyle = gr;
+    ctx.beginPath(); ctx.arc(sx, sy, R * 1.25, 0, 6.283); ctx.fill();
+
+    // raios de luz girando devagar (só acima da linha d'água)
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, W, horizonte); ctx.clip();
+    ctx.translate(sx, sy);
+    ctx.rotate(seg * .015);
+    const N = 16;
+    for (let i = 0; i < N; i++) {
+      const ang = i * 2 * Math.PI / N + Math.sin(seg * .3 + i) * .04;
+      const larg = .022 + .012 * Math.sin(seg * .7 + i * 1.7);
+      const comp = R * (3.6 + 1.6 * Math.sin(seg * .45 + i * 2.3));
+      const a = .085 * (.55 + .45 * Math.sin(seg * .9 + i * 1.3));
+      const lg = ctx.createLinearGradient(0, 0, Math.cos(ang) * comp, Math.sin(ang) * comp);
+      lg.addColorStop(0, 'rgba(255,235,200,' + a + ')');
+      lg.addColorStop(1, 'rgba(255,200,180,0)');
+      ctx.fillStyle = lg;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ang - larg) * R, Math.sin(ang - larg) * R);
+      ctx.lineTo(Math.cos(ang) * comp, Math.sin(ang) * comp);
+      ctx.lineTo(Math.cos(ang + larg) * R, Math.sin(ang + larg) * R);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+
+    // coluna de luz sobre a água, respirando
+    const [cx, cy] = naTela(AGUA.u, (AGUA.topo + AGUA.fundo) / 2);
+    const rx = .04 * G.dw * esc, ry = (AGUA.fundo - AGUA.topo) / 2 * G.dh * esc;
+    ctx.save();
+    ctx.translate(cx, cy); ctx.scale(1, ry / rx);
+    gr = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+    gr.addColorStop(0, 'rgba(255,225,190,' + (.15 + .08 * Math.sin(seg * 1.6)) + ')');
+    gr.addColorStop(1, 'rgba(255,200,190,0)');
+    ctx.fillStyle = gr;
+    ctx.beginPath(); ctx.arc(0, 0, rx, 0, 6.283); ctx.fill();
+    ctx.restore();
+
+    // cintilação: traços curtos de luz acendendo e apagando no reflexo
+    if (!brilhos.length) brilhos = Array.from({ length: 95 }, () => { const b = novoBrilho(); b.vida = rnd(0, b.dur); return b; });
+    ctx.lineCap = 'round';
+    brilhos.forEach((b, i) => {
+      b.vida += dt;
+      if (b.vida >= b.dur) { brilhos[i] = novoBrilho(); return; }
+      const [x, y] = naTela(b.u, b.v);
+      const L = b.comp * G.dw * esc;
+      const a = Math.sin(Math.PI * b.vida / b.dur) * (1 - b.k * .35);
+      ctx.globalAlpha = a;
+      ctx.strokeStyle = 'rgb(255,250,228)';
+      ctx.lineWidth = 1.1 + b.k * 1.6;
+      ctx.beginPath(); ctx.moveTo(x - L / 2, y); ctx.lineTo(x + L / 2, y); ctx.stroke();
+      {   // halo suave em volta de cada traço
+        const s = (8 + b.k * 10) * esc;
+        ctx.globalAlpha = a * .5;
+        ctx.drawImage(sprite, x - s / 2, y - s / 2, s, s);
+      }
+    });
+    ctx.globalAlpha = 1;
+  }
+
   function dimensionar() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = innerWidth; H = innerHeight;
@@ -1462,6 +1579,8 @@ const VFX = (() => {
     const seg = t / 1000;
     ctx.clearRect(0, 0, W, H);
     ctx.globalCompositeOperation = 'lighter';
+
+    desenharSol(seg, dt);
 
     // estrelas cintilando no alto do céu
     estrelas.forEach((e) => {
