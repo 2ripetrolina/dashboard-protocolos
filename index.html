@@ -228,7 +228,22 @@
       <p class="usuarios"><a id="link-permissoes" target="_blank" rel="noopener" hidden>Gerenciar códigos de acesso (planilha; abre só na conta dona)</a></p>
     </section>
 
-    <div class="grade" id="grade">
+    <section class="card">
+      <h2>Registros</h2>
+      <div class="mt">
+        <input type="search" id="busca" placeholder="Buscar (nome, motivo, setor…)" style="width:min(100%,420px)">
+      </div>
+      <div class="tabela-wrap">
+        <table id="tabela"><thead></thead><tbody></tbody></table>
+      </div>
+      <div class="paginacao">
+        <button id="pg-ant" class="secundario">‹</button>
+        <span id="pg-info"></span>
+        <button id="pg-prox" class="secundario">›</button>
+      </div>
+    </section>
+
+    <div class="grade mt" id="grade">
       <figure class="fig">
         <h2 id="t-serie">Registros de equívocos por semana</h2>
         <p class="sub">Nº de registros semanais, média móvel de 4 semanas e meta</p>
@@ -264,20 +279,6 @@
       <p class="fonte" id="f-pessoas"></p>
     </figure>
 
-    <section class="card">
-      <h2>Registros</h2>
-      <div class="mt">
-        <input type="search" id="busca" placeholder="Buscar (nome, motivo, setor…)" style="width:min(100%,420px)">
-      </div>
-      <div class="tabela-wrap">
-        <table id="tabela"><thead></thead><tbody></tbody></table>
-      </div>
-      <div class="paginacao">
-        <button id="pg-ant" class="secundario">‹</button>
-        <span id="pg-info"></span>
-        <button id="pg-prox" class="secundario">›</button>
-      </div>
-    </section>
   </main>
 
 </div>
