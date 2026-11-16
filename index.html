@@ -3,9 +3,14 @@
 <head>
 <base target="_top">
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-JZpkxadFHE+WFw2HNmKgq3EHyz1G1hV2ncrrip/ww3g=' https://cdn.jsdelivr.net/npm/echarts@5.5.1/; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboard de Protocolos</title>
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<meta name="referrer" content="no-referrer">
+<!-- integrity: o navegador recusa o arquivo se o CDN for adulterado -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"
+        integrity="sha384-Mx5lkUEQPM1pOJCwFtUICyX45KNojXbkWdYhkKUKsbv391mavbfoAmONbzkgYPzR"
+        crossorigin="anonymous"></script>
 <style>
   :root {
     --bg: #f6f7f9;
@@ -104,13 +109,52 @@
 
   [hidden] { display: none !important; }
 
-  /* ── Tela do código: imagem de fundo + cartão translúcido centralizado ──
+  /* ── Tela do código: imagem de fundo + efeitos + cartão translúcido ──
      URL absoluta para valer também quando a página é servida pelo Apps Script. */
-  body.login { background: #6a5a9e; }
-  body.login::before {
-    content: ''; position: fixed; inset: 0; z-index: 0;
-    background: #6a5a9e url('https://2ripetrolina.github.io/dashboard-protocolos/fundo-login.webp') center 60% / cover no-repeat;
+  body.login { background: #5b4a8a; overflow: hidden; }
+  body.login::before {          /* foto com aproximação lenta (efeito Ken Burns) */
+    content: ''; position: fixed; inset: -2%; z-index: 0;
+    background: #5b4a8a url('https://2ripetrolina.github.io/dashboard-protocolos/fundo-login.webp') 62% 45% / cover no-repeat;
+    animation: kenburns 48s ease-in-out infinite alternate;
+    will-change: transform;
   }
+  body.login::after {           /* brilho do pôr do sol pulsando + vinheta */
+    content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(60% 45% at 82% 22%, rgba(255, 150, 190, .28), transparent 70%),
+      radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(25, 12, 45, .55) 100%);
+    mix-blend-mode: screen;
+    animation: brilho 9s ease-in-out infinite alternate;
+  }
+  @keyframes kenburns {
+    from { transform: scale(1) translate3d(0, 0, 0); }
+    to   { transform: scale(1.07) translate3d(-1.2%, -.8%, 0); }
+  }
+  @keyframes brilho { from { opacity: .55; } to { opacity: 1; } }
+  #vfx { display: none; }
+  body.login #vfx {
+    display: block; position: fixed; inset: 0; z-index: 0;
+    width: 100%; height: 100%; pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body.login::before, body.login::after { animation: none; }
+    body.login #vfx { display: none; }
+  }
+
+  /* relógio do dia, só na tela do código */
+  .relogio { display: none; }
+  body.login .relogio {
+    display: block; margin: -4px 0 18px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--vidro-borda);
+  }
+  .relogio .saudacao { display: block; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--texto-sec); }
+  .relogio .hora {
+    display: block; font: 300 52px/1.05 "Segoe UI", Arial, Helvetica, sans-serif;
+    letter-spacing: .02em; font-variant-numeric: tabular-nums; margin: 4px 0 2px;
+  }
+  .relogio .hora small { font-size: 18px; color: var(--texto-sec); margin-left: 4px; }
+  .relogio .data { display: block; font-size: 14px; color: var(--texto-sec); }
+  .relogio .data::first-letter { text-transform: uppercase; }
   body.login .pagina {
     position: relative; z-index: 1; min-height: 100vh; min-height: 100dvh;
     display: flex; align-items: center; justify-content: center; padding: 16px;
@@ -133,8 +177,14 @@
 </style>
 </head>
 <body class="login">
+<canvas id="vfx" aria-hidden="true"></canvas>
 <div class="pagina">
   <header class="topo">
+  <div class="relogio" aria-live="off">
+    <span class="saudacao" id="rel-saudacao"></span>
+    <time class="hora" id="rel-hora"></time>
+    <span class="data" id="rel-data"></span>
+  </div>
   <h1>Dashboard de Protocolos</h1>
 
   <div class="controles">
@@ -233,6 +283,15 @@
 </div>
 
 <script>
+// Anticlickjacking: no GitHub Pages a página nunca roda dentro de moldura de
+// outro site (lá não dá para enviar o cabeçalho frame-ancestors). No Apps Script
+// ela roda em iframe do próprio Google, então a regra vale só fora dele.
+if (/\.github\.io$/.test(location.hostname) && window.top !== window.self) {
+  document.documentElement.style.display = 'none';
+  try { window.top.location = window.location.href; } catch (e) { /* bloqueado: fica em branco */ }
+  throw new Error('Página aberta dentro de outro site; bloqueada.');
+}
+
 // ══════════════════════════════════════════════════════════════
 // Estado e constantes
 // ══════════════════════════════════════════════════════════════
@@ -378,7 +437,7 @@ async function entrar(codigo) {
   $('codigo').value = '';
   $('form-login').hidden = true;
   $('ctl-painel').hidden = false;
-  document.body.classList.remove('login');
+  telaLogin(false);
   await carregarPainel(false, false);
 }
 
@@ -393,7 +452,7 @@ function sair(msg, erro) {
   $('painel').hidden = true;
   $('ctl-painel').hidden = true;
   $('form-login').hidden = false;
-  document.body.classList.add('login');
+  telaLogin(true);
   status(msg || 'Digite seu código de acesso', '', !!erro);
   $('codigo').focus();
 }
@@ -477,7 +536,9 @@ function render() {
     $('ac-lista').textContent = D.acessos.quemHoje.join(' · ') || '—';
   }
   const lp = $('link-permissoes');
-  lp.hidden = !(D.master && D.linkConfig);
+  // só aceita link de planilha do Google (nunca javascript: ou outro domínio)
+  const linkOk = typeof D.linkConfig === 'string' && /^https:\/\/docs\.google\.com\/spreadsheets\//.test(D.linkConfig);
+  lp.hidden = !(D.master && linkOk);
   if (!lp.hidden) lp.href = D.linkConfig;
 
   // SICASE: sem tipo de erro → sem composição nem dumbbell; série em largura total
@@ -841,6 +902,149 @@ function aplicarTemaSalvo() {
     if (t) document.documentElement.setAttribute('data-theme', t);
   } catch (e) { /* armazenamento indisponível: segue o tema do sistema */ }
 }
+
+// ══════════════════════════════════════════════════════════════
+// Tela do código: relógio do dia e efeitos animados do fundo
+// ══════════════════════════════════════════════════════════════
+const FUSO = 'America/Recife';   // Petrolina
+const fmtHora = new Intl.DateTimeFormat('pt-BR', { timeZone: FUSO, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+const fmtData = new Intl.DateTimeFormat('pt-BR', { timeZone: FUSO, weekday: 'long', day: 'numeric', month: 'long' });
+
+function atualizarRelogio() {
+  if (!document.body.classList.contains('login')) return;
+  const agora = new Date();
+  const [h, m, s] = fmtHora.format(agora).split(':');
+  const hn = +h;
+  $('rel-saudacao').textContent = hn < 5 ? 'Boa noite' : hn < 12 ? 'Bom dia' : hn < 18 ? 'Boa tarde' : 'Boa noite';
+  const hora = $('rel-hora');
+  hora.textContent = h + ':' + m;
+  const seg = document.createElement('small');
+  seg.textContent = s;
+  hora.appendChild(seg);
+  hora.dateTime = agora.toISOString();
+  $('rel-data').textContent = fmtData.format(agora);
+}
+
+const VFX = (() => {
+  const cv = $('vfx');
+  const ctx = cv.getContext('2d');
+  const reduzir = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W = 0, H = 0, dpr = 1, rodando = false, ult = 0, proxCadente = 0;
+  let estrelas = [], luzes = [], cadente = null;
+
+  // sprite de brilho pré-desenhado (desenhar gradiente a cada quadro pesa)
+  const sprite = document.createElement('canvas');
+  sprite.width = sprite.height = 64;
+  const sg = sprite.getContext('2d');
+  const g = sg.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, 'rgba(255,255,255,1)');
+  g.addColorStop(.25, 'rgba(255,255,255,.55)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  sg.fillStyle = g; sg.fillRect(0, 0, 64, 64);
+
+  const CORES = ['255,214,160', '255,180,200', '255,240,210', '255,196,140'];
+  const rnd = (a, b) => a + Math.random() * (b - a);
+
+  function novaLuz(espalhar) {
+    return {
+      x: rnd(0, W), y: espalhar ? rnd(H * .35, H) : H + rnd(0, 40),
+      r: rnd(.8, 2.4), vy: rnd(-14, -5), fase: rnd(0, 6.28), amp: rnd(6, 22),
+      vida: 0, dur: rnd(9, 18), cor: CORES[Math.floor(Math.random() * CORES.length)],
+    };
+  }
+
+  function dimensionar() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = innerWidth; H = innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const area = W * H;
+    estrelas = Array.from({ length: Math.min(70, Math.round(area / 16000)) }, () => ({
+      x: rnd(0, W), y: rnd(0, H * .32), r: rnd(.35, 1.2), fase: rnd(0, 6.28), vel: rnd(.6, 1.8),
+    }));
+    luzes = Array.from({ length: Math.min(46, Math.round(area / 26000)) }, () => novaLuz(true));
+  }
+
+  function quadro(t) {
+    if (!rodando) return;
+    if (!document.body.classList.contains('login')) { rodando = false; return; }
+    const dt = Math.min(.05, (t - (ult || t)) / 1000);
+    ult = t;
+    const seg = t / 1000;
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'lighter';
+
+    // estrelas cintilando no alto do céu
+    estrelas.forEach((e) => {
+      const a = .25 + .55 * (.5 + .5 * Math.sin(seg * e.vel + e.fase));
+      ctx.globalAlpha = a;
+      const s = e.r * 6;
+      ctx.drawImage(sprite, e.x - s / 2, e.y - s / 2, s, s);
+    });
+
+    // partículas de luz quente subindo devagar, como poeira no pôr do sol
+    luzes.forEach((p, i) => {
+      p.vida += dt;
+      p.y += p.vy * dt;
+      const x = p.x + Math.sin(seg * .5 + p.fase) * p.amp;
+      const k = p.vida / p.dur;
+      if (k >= 1 || p.y < H * .25) { luzes[i] = novaLuz(false); return; }
+      const a = Math.sin(Math.PI * k) * .8;   // aparece e some suave
+      const s = p.r * 9;
+      ctx.globalAlpha = a;
+      ctx.drawImage(sprite, x - s / 2, p.y - s / 2, s, s);
+      ctx.globalAlpha = a * .9;
+      ctx.fillStyle = 'rgba(' + p.cor + ',1)';
+      ctx.beginPath(); ctx.arc(x, p.y, p.r * .55, 0, 6.283); ctx.fill();
+    });
+
+    // estrela cadente ocasional
+    if (!cadente && seg > proxCadente) {
+      cadente = { x: rnd(W * .15, W * .85), y: rnd(H * .03, H * .2), vx: rnd(380, 560) * (Math.random() < .5 ? -1 : 1), vy: rnd(90, 160), vida: 0, dur: rnd(.7, 1.1) };
+    }
+    if (cadente) {
+      const c = cadente;
+      c.vida += dt; c.x += c.vx * dt; c.y += c.vy * dt;
+      const k = c.vida / c.dur;
+      if (k >= 1) { cadente = null; proxCadente = seg + rnd(9, 18); }
+      else {
+        const cauda = .16;
+        const grad = ctx.createLinearGradient(c.x, c.y, c.x - c.vx * cauda, c.y - c.vy * cauda);
+        grad.addColorStop(0, 'rgba(255,255,255,.9)');
+        grad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.globalAlpha = Math.sin(Math.PI * k);
+        ctx.strokeStyle = grad; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(c.x - c.vx * cauda, c.y - c.vy * cauda); ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    requestAnimationFrame(quadro);
+  }
+
+  function iniciar() {
+    if (reduzir || rodando || document.hidden) return;
+    if (!W) dimensionar();
+    rodando = true; ult = 0;
+    proxCadente = performance.now() / 1000 + rnd(3, 7);
+    requestAnimationFrame(quadro);
+  }
+  function parar() { rodando = false; }
+
+  let tm;
+  window.addEventListener('resize', () => { clearTimeout(tm); tm = setTimeout(() => { if (W) dimensionar(); }, 150); });
+  document.addEventListener('visibilitychange', () => { document.hidden ? parar() : iniciar(); });
+  return { iniciar, parar };
+})();
+
+function telaLogin(ativa) {
+  document.body.classList.toggle('login', ativa);
+  if (ativa) { atualizarRelogio(); VFX.iniciar(); } else { VFX.parar(); }
+}
+
+atualizarRelogio();
+setInterval(atualizarRelogio, 1000);
+VFX.iniciar();
 
 // ══════════════════════════════════════════════════════════════
 // Eventos
