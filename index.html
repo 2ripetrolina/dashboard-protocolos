@@ -121,7 +121,7 @@
         <select id="sel-pessoa"></select>
       </label>
       <button id="btn-atualizar">Atualizar dados</button>
-      <button id="btn-sair" class="secundario">Sair</button>
+      <button id="btn-sair" class="secundario" title="Sair e esquecer o código neste computador">Sair</button>
     </div>
     <button id="btn-tema" class="secundario" title="Alternar tema claro/escuro">◐ Tema</button>
   </div>
@@ -287,9 +287,17 @@ function status(msg, extra, erro) {
   }
 }
 
-// o código fica guardado só nesta aba do navegador (some ao fechá-la)
-function lerSessao() { try { return sessionStorage.getItem('codigo'); } catch (e) { return null; } }
-function gravarSessao(c) { try { c ? sessionStorage.setItem('codigo', c) : sessionStorage.removeItem('codigo'); } catch (e) { /* ignora */ } }
+// O código certo fica gravado neste navegador (localStorage): na próxima vez
+// o painel abre direto. Some com "Sair" ou quando o código é trocado/revogado.
+function lerSessao() {
+  try { return localStorage.getItem('codigo') || sessionStorage.getItem('codigo'); } catch (e) { return null; }
+}
+function gravarSessao(c) {
+  try {
+    sessionStorage.removeItem('codigo');
+    c ? localStorage.setItem('codigo', c) : localStorage.removeItem('codigo');
+  } catch (e) { /* ignora: navegador sem armazenamento, pede o código de novo */ }
+}
 
 async function iniciar() {
   aplicarTemaSalvo();
