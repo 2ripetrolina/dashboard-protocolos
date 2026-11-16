@@ -3,6 +3,7 @@
 <head>
 <base target="_top">
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboard de Protocolos</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
 <style>
@@ -17,18 +18,22 @@
     --pew-bg: #eff2f5;
     --erro: #8f1f10;
     --linha-alt: #f3f5f8;
+    --vidro: rgba(255, 255, 255, .72);
+    --vidro-borda: rgba(255, 255, 255, .6);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #15181c; --superficie: #1f2329; --texto: #e6e6e6; --texto-sec: #a9adb3;
       --borda: #343a42; --primaria: #7fa8c6; --primaria-texto: #10151a;
       --erro: #ff8a7a; --linha-alt: #252a31;
+      --vidro: rgba(22, 24, 34, .7); --vidro-borda: rgba(255, 255, 255, .14);
     }
   }
   :root[data-theme="dark"] {
     --bg: #15181c; --superficie: #1f2329; --texto: #e6e6e6; --texto-sec: #a9adb3;
     --borda: #343a42; --primaria: #7fa8c6; --primaria-texto: #10151a;
     --erro: #ff8a7a; --linha-alt: #252a31;
+    --vidro: rgba(22, 24, 34, .7); --vidro-borda: rgba(255, 255, 255, .14);
   }
 
   * { box-sizing: border-box; }
@@ -98,10 +103,38 @@
   .paginacao button { padding: 4px 12px; }
 
   [hidden] { display: none !important; }
+
+  /* ── Tela do código: imagem de fundo + cartão translúcido centralizado ──
+     URL absoluta para valer também quando a página é servida pelo Apps Script. */
+  body.login { background: #6a5a9e; }
+  body.login::before {
+    content: ''; position: fixed; inset: 0; z-index: 0;
+    background: #6a5a9e url('https://2ripetrolina.github.io/dashboard-protocolos/fundo-login.webp') center 60% / cover no-repeat;
+  }
+  body.login .pagina {
+    position: relative; z-index: 1; min-height: 100vh; min-height: 100dvh;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  body.login .topo {
+    width: 100%; max-width: 380px; text-align: center;
+    background: var(--vidro); border: 1px solid var(--vidro-borda); border-radius: 14px;
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    box-shadow: 0 16px 48px rgba(30, 16, 70, .35);
+    padding: 28px 24px 22px;
+  }
+  body.login .topo h1 { font-size: 22px; margin-bottom: 20px; }
+  body.login .topo > .controles { display: block; }
+  body.login #form-login { flex-direction: column; align-items: stretch; gap: 12px; }
+  body.login #form-login .campo { text-align: left; color: var(--texto); }
+  body.login #form-login input { width: 100%; min-width: 0; padding: 10px 12px; }
+  body.login #form-login button { padding: 10px 14px; }
+  body.login #btn-tema { display: none; }
+  body.login .status { margin-top: 14px; }
 </style>
 </head>
-<body>
+<body class="login">
 <div class="pagina">
+  <header class="topo">
   <h1>Dashboard de Protocolos</h1>
 
   <div class="controles">
@@ -126,6 +159,7 @@
     <button id="btn-tema" class="secundario" title="Alternar tema claro/escuro">◐ Tema</button>
   </div>
   <p id="status" class="status" role="status">Carregando…</p>
+  </header>
 
   <main id="painel" hidden>
     <section class="kpis">
@@ -344,6 +378,7 @@ async function entrar(codigo) {
   $('codigo').value = '';
   $('form-login').hidden = true;
   $('ctl-painel').hidden = false;
+  document.body.classList.remove('login');
   await carregarPainel(false, false);
 }
 
@@ -358,6 +393,7 @@ function sair(msg, erro) {
   $('painel').hidden = true;
   $('ctl-painel').hidden = true;
   $('form-login').hidden = false;
+  document.body.classList.add('login');
   status(msg || 'Digite seu código de acesso', '', !!erro);
   $('codigo').focus();
 }
