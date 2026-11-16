@@ -3,7 +3,7 @@
 <head>
 <base target="_top">
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-CD3lEDVxeHkRSK3qutmm1KSMnH3j3Z0be7WaR1cdwVM=' https://cdn.jsdelivr.net/npm/echarts@5.5.1/; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-W7+xn0Gr2XdLFvw/+ttOo6kX6HFkR74o47RRPAwOnr8=' https://cdn.jsdelivr.net/npm/echarts@5.5.1/; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sentimentos</title>
 <meta name="referrer" content="no-referrer">
@@ -13,125 +13,266 @@
         crossorigin="anonymous"></script>
 <style>
   :root {
-    --bg: #f6f7f9;
+    color-scheme: light;
+    --bg: #f4f5f8;
     --superficie: #ffffff;
-    --texto: #222222;
-    --texto-sec: #58585a;
-    --borda: #dcdfe4;
-    --primaria: #33607f;
+    --superficie-2: #f8f9fb;
+    --texto: #14171c;
+    --texto-sec: #5b616e;
+    --texto-mudo: #8a909c;
+    --borda: #e4e7ec;
+    --primaria: #2a5f97;
     --primaria-texto: #ffffff;
-    --erro: #8f1f10;
-    --ok: #1a7a3c;
-    --linha-alt: #f3f5f8;
+    --primaria-suave: rgba(42, 95, 151, .09);
+    --erro: #b42318;
+    --ok: #127a3a;
+    --ok-suave: rgba(18, 122, 58, .1);
+    --linha-alt: #f8f9fb;
+    --sombra: 0 1px 2px rgba(16, 24, 40, .04), 0 2px 8px rgba(16, 24, 40, .05);
     --vidro: rgba(255, 255, 255, .72);
     --vidro-borda: rgba(255, 255, 255, .6);
-    /* gráficos (lidos também pelo JS para o ECharts) */
-    --fig-bg: #eff2f5; --fig-texto: #222222; --fig-sub: #58585a;
-    --fig-grade: rgba(0, 0, 0, .35); --fig-trilho: #d6d6d6;
-    --fig-meta: #8f1f10; --fig-azul: #33607f; --fig-roxo: #762a83;
+    --barra-app: rgba(244, 245, 248, .82);
+    --marca: linear-gradient(135deg, #f28aa8 0%, #a77be0 50%, #4f8fe0 100%);
+    /* gráficos (lidos pelo JS para o ECharts). Paleta categórica validada
+       para daltonismo (ordem fixa: azul, laranja, água, amarelo, magenta, verde). */
+    --ch-fundo: #ffffff; --ch-texto: #5b616e; --ch-forte: #14171c; --ch-grade: #e9ecf1;
+    --ch-meta: #8a909c; --ch-outros: #b4b2aa;
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #15181c; --superficie: #1f2329; --texto: #e6e6e6; --texto-sec: #a9adb3;
-      --borda: #343a42; --primaria: #7fa8c6; --primaria-texto: #10151a;
-      --erro: #ff8a7a; --ok: #6fcf8f; --linha-alt: #252a31;
+      color-scheme: dark;
+      --bg: #0d0f13; --superficie: #151920; --superficie-2: #1a1f27;
+      --texto: #e8eaee; --texto-sec: #a3a9b5; --texto-mudo: #767d8a; --borda: #252a33;
+      --primaria: #8bb8ec; --primaria-texto: #0b1220; --primaria-suave: rgba(139, 184, 236, .13);
+      --erro: #ff8a7a; --ok: #6fcf8f; --ok-suave: rgba(111, 207, 143, .12); --linha-alt: #181c23;
+      --sombra: 0 1px 2px rgba(0, 0, 0, .3);
       --vidro: rgba(22, 24, 34, .7); --vidro-borda: rgba(255, 255, 255, .14);
-      --fig-bg: #1b1f25; --fig-texto: #e3e5e8; --fig-sub: #a3a8b0;
-      --fig-grade: rgba(255, 255, 255, .22); --fig-trilho: #3b424d;
-      --fig-meta: #ff8a7a; --fig-azul: #6f9fc4; --fig-roxo: #c08ad0;
+      --barra-app: rgba(13, 15, 19, .82);
+      --ch-fundo: #151920; --ch-texto: #a3a9b5; --ch-forte: #e8eaee; --ch-grade: #232831;
+      --ch-meta: #8b919c; --ch-outros: #6b6a64;
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #0ca30c;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #15181c; --superficie: #1f2329; --texto: #e6e6e6; --texto-sec: #a9adb3;
-    --borda: #343a42; --primaria: #7fa8c6; --primaria-texto: #10151a;
-    --erro: #ff8a7a; --ok: #6fcf8f; --linha-alt: #252a31;
+    color-scheme: dark;
+    --bg: #0d0f13; --superficie: #151920; --superficie-2: #1a1f27;
+    --texto: #e8eaee; --texto-sec: #a3a9b5; --texto-mudo: #767d8a; --borda: #252a33;
+    --primaria: #8bb8ec; --primaria-texto: #0b1220; --primaria-suave: rgba(139, 184, 236, .13);
+    --erro: #ff8a7a; --ok: #6fcf8f; --ok-suave: rgba(111, 207, 143, .12); --linha-alt: #181c23;
+    --sombra: 0 1px 2px rgba(0, 0, 0, .3);
     --vidro: rgba(22, 24, 34, .7); --vidro-borda: rgba(255, 255, 255, .14);
-    --fig-bg: #1b1f25; --fig-texto: #e3e5e8; --fig-sub: #a3a8b0;
-    --fig-grade: rgba(255, 255, 255, .22); --fig-trilho: #3b424d;
-    --fig-meta: #ff8a7a; --fig-azul: #6f9fc4; --fig-roxo: #c08ad0;
+    --barra-app: rgba(13, 15, 19, .82);
+    --ch-fundo: #151920; --ch-texto: #a3a9b5; --ch-forte: #e8eaee; --ch-grade: #232831;
+    --ch-meta: #8b919c; --ch-outros: #6b6a64;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #0ca30c;
   }
 
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--texto);
-    font: 15px/1.45 Arial, Helvetica, sans-serif;
+    font: 15px/1.5 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
-  .pagina { max-width: 1400px; margin: 0 auto; padding: 20px 16px 48px; }
-  h1 { font-size: 26px; margin: 0 0 14px; }
-  h2 { font-size: 18px; margin: 0; }
+  .pagina { max-width: 1320px; margin: 0 auto; padding: 0 24px 56px; }
+  @media (max-width: 600px) { .pagina { padding: 0 16px 40px; } }
+  h1 { font-size: 22px; font-weight: 650; letter-spacing: -.01em; margin: 0; }
+  h2 { font-size: 16px; font-weight: 600; margin: 0; letter-spacing: -.005em; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-  .controles { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  .controles { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .campo { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--texto-sec); }
   select, input[type="search"], input[type="password"] {
-    font: inherit; color: var(--texto); background: var(--superficie);
-    border: 1px solid var(--borda); border-radius: 6px; padding: 7px 10px; min-width: 160px;
+    font: inherit; font-size: 14px; color: var(--texto); background: var(--superficie);
+    border: 1px solid var(--borda); border-radius: 10px; padding: 8px 12px; min-width: 160px;
+    transition: border-color .15s, box-shadow .15s;
   }
+  select:focus, input:focus { outline: none; border-color: var(--primaria); box-shadow: 0 0 0 3px var(--primaria-suave); }
   button {
-    font: inherit; cursor: pointer; border-radius: 6px; padding: 8px 14px;
+    font: inherit; font-size: 14px; font-weight: 550; cursor: pointer; border-radius: 10px; padding: 8px 14px;
     border: 1px solid var(--primaria); background: var(--primaria); color: var(--primaria-texto);
+    transition: background .15s, border-color .15s, color .15s, opacity .15s;
   }
-  button.secundario { background: transparent; color: var(--primaria); }
-  button:disabled { opacity: .55; cursor: progress; }
-  .status { margin: 10px 0 0; }
-  .status small { color: var(--texto-sec); margin-left: 8px; }
+  button:hover { filter: brightness(1.06); }
+  button:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--primaria-suave); }
+  button.secundario { background: var(--superficie); color: var(--texto); border-color: var(--borda); }
+  button.secundario:hover { border-color: var(--texto-mudo); filter: none; }
+  button.icone {
+    width: 38px; height: 38px; padding: 0; display: inline-grid; place-items: center; font-size: 17px;
+    background: var(--superficie); color: var(--texto-sec); border-color: var(--borda);
+  }
+  button.icone:hover { color: var(--texto); border-color: var(--texto-mudo); filter: none; }
+  button.link { background: none; border: none; color: var(--primaria); padding: 4px 2px; font-weight: 550; }
+  button.link:hover { text-decoration: underline; filter: none; }
+  button:disabled { opacity: .5; cursor: default; }
+  .status { margin: 0; font-size: 13px; color: var(--texto-sec); }
+  .status small { color: var(--texto-mudo); margin-left: 8px; }
   .status.erro { color: var(--erro); }
 
-  .kpis { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0 8px; }
+  /* ── Barra superior do painel ── */
+  .logo {
+    width: 36px; height: 36px; border-radius: 10px; flex: none;
+    display: grid; place-items: center; background: var(--marca);
+    color: #fff; font-weight: 700; font-size: 18px; box-shadow: 0 4px 12px rgba(120, 90, 200, .25);
+  }
+  .marca { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .marca-sub { margin: 0; font-size: 13px; color: var(--texto-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  body:not(.login) .topo {
+    position: sticky; top: 0; z-index: 10;
+    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 16px;
+    margin: 0 -24px 8px; padding: 14px 24px 12px;
+    background: var(--barra-app);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px); backdrop-filter: saturate(1.4) blur(14px);
+    border-bottom: 1px solid var(--borda);
+  }
+  body:not(.login) .topo::before {   /* fio com as cores do pôr do sol */
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--marca);
+  }
+  body:not(.login) .topo .status { grid-column: 1 / -1; }
+  @media (max-width: 760px) {
+    body:not(.login) .topo {
+      position: relative;   /* no celular a barra não fica presa no topo: ocupa espaço demais */
+      grid-template-columns: 1fr; margin: 0 -16px 8px; padding: 12px 16px 10px;
+    }
+  }
+
+  /* controle segmentado de período */
+  .segmentado {
+    display: inline-flex; padding: 3px; gap: 2px; border-radius: 11px;
+    background: var(--superficie-2); border: 1px solid var(--borda);
+  }
+  .segmentado button {
+    background: transparent; border: none; color: var(--texto-sec);
+    padding: 6px 12px; border-radius: 8px; font-weight: 550;
+  }
+  .segmentado button:hover { color: var(--texto); filter: none; }
+  .segmentado button[aria-checked="true"] {
+    background: var(--superficie); color: var(--texto);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .12), 0 0 0 1px var(--borda);
+  }
+
+  /* ── Seções ── */
+  .secao-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 26px 0 12px; }
+  .secao-cab h2 { font-size: 13px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--texto-sec); }
+  .escopo { margin: 0; font-size: 14px; color: var(--texto-sec); }
+  .escopo strong { color: var(--texto); font-weight: 600; }
+
+  /* ── Indicadores ── */
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
   .kpi {
-    background: var(--superficie); border: 1px solid var(--borda); border-radius: 8px;
-    padding: 12px 16px; min-width: 150px;
+    background: var(--superficie); border: 1px solid var(--borda); border-radius: 14px;
+    padding: 16px 18px; box-shadow: var(--sombra); min-width: 0;
   }
-  .kpi b { display: block; font-size: 28px; }
-  .kpi span { font-size: 13px; color: var(--texto-sec); }
-  .escopo { align-self: center; margin: 0; }
-  .usuarios { font-size: 13px; color: var(--texto-sec); margin: 0 0 8px; word-break: break-word; }
-  .usuarios a { color: var(--primaria); }
-
-  .grade { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
-  .grade.uma { grid-template-columns: 1fr; }
-  @media (max-width: 900px) { .grade { grid-template-columns: 1fr; } }
-
-  /* Cartões dos gráficos: fundo Pew fixo (claro) nos dois temas, como no painel Julia */
-  .fig {
-    margin: 0; background: var(--fig-bg); color: var(--fig-texto); border-radius: 8px;
-    padding: 18px 18px 12px; min-width: 0;
+  .kpi-rot { display: block; font-size: 13px; color: var(--texto-sec); margin-bottom: 6px; }
+  .kpi b {
+    display: block; font-size: 30px; font-weight: 650; line-height: 1.15; letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
   }
-  .fig h2 { font-size: 19px; color: var(--fig-texto); }
-  .fig .sub { font: italic 15px Georgia, serif; color: var(--fig-sub); margin: 4px 0 6px; }
-  .fig .fonte { font-size: 12px; color: var(--fig-sub); margin: 6px 0 0; }
-  .fig .vazio { color: var(--fig-sub); padding: 40px 0; text-align: center; }
-
-  /* comparação com o período anterior */
-  .kpi .var { display: block; font-size: 13px; margin-top: 4px; color: var(--texto-sec); }
+  .kpi b.kpi-texto { font-size: 18px; font-weight: 600; letter-spacing: 0; line-height: 1.3; overflow-wrap: anywhere; }
+  .kpi .var { display: block; font-size: 13px; margin-top: 6px; color: var(--texto-mudo); }
   .kpi .var.melhor { color: var(--ok); }
   .kpi .var.pior { color: var(--erro); }
-
-  /* barra da tabela: busca + exportar; aviso do filtro vindo do gráfico */
-  .barra-tabela { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
-  .barra-tabela input[type="search"] { flex: 1 1 260px; max-width: 420px; }
-  .filtro-grafico {
-    display: inline-flex; align-items: center; gap: 8px; margin-top: 10px;
-    background: var(--linha-alt); border: 1px solid var(--borda); border-radius: 999px;
-    padding: 4px 6px 4px 12px; font-size: 14px;
+  .kpi-destaque { position: relative; overflow: hidden; }
+  .kpi-destaque::after {
+    content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--marca); opacity: .9;
   }
-  .filtro-grafico button { padding: 2px 10px; border-radius: 999px; }
-  .dica { font-size: 13px; color: var(--texto-sec); margin: 10px 0 0; }
-  .grafico { width: 100%; height: 400px; }
-  .mt { margin-top: 16px; }
 
+  /* ── Cartões ── */
   .card {
-    background: var(--superficie); border: 1px solid var(--borda); border-radius: 8px;
-    padding: 16px; margin-top: 16px;
+    background: var(--superficie); border: 1px solid var(--borda); border-radius: 14px;
+    padding: 18px 20px; margin-top: 14px; box-shadow: var(--sombra);
   }
-  .tabela-wrap { overflow-x: auto; margin-top: 12px; }
-  table { border-collapse: collapse; width: 100%; font-size: 14px; }
-  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--borda); }
-  th { font-size: 13px; color: var(--texto-sec); white-space: nowrap; }
-  tbody tr:nth-child(even) { background: var(--linha-alt); }
-  td.longo { min-width: 260px; max-width: 480px; white-space: normal; overflow-wrap: anywhere; }
-  td.ts { white-space: nowrap; }
-  .paginacao { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-top: 10px; }
-  .paginacao button { padding: 4px 12px; }
+  .card-cab { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .card-sub { margin: 2px 0 0; font-size: 13px; color: var(--texto-sec); }
+
+  /* acessos (gestão), recolhível */
+  details.acessos summary {
+    cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    font-weight: 600;
+  }
+  details.acessos summary::-webkit-details-marker { display: none; }
+  details.acessos summary::after { content: '▾'; color: var(--texto-mudo); transition: transform .2s; }
+  details.acessos[open] summary::after { transform: rotate(180deg); }
+  details.acessos .resumo { margin-left: auto; font-weight: 400; font-size: 13px; color: var(--texto-sec); }
+  .mini-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin: 14px 0 10px; }
+  .mini-stats div { background: var(--superficie-2); border-radius: 10px; padding: 10px 12px; }
+  .mini-stats b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+  .mini-stats span { font-size: 12px; color: var(--texto-sec); }
+  .usuarios { font-size: 13px; color: var(--texto-sec); margin: 6px 0 0; word-break: break-word; }
+  .usuarios a { color: var(--primaria); font-weight: 550; text-decoration: none; }
+  .usuarios a:hover { text-decoration: underline; }
+
+  /* ── Tabela ── */
+  .barra-tabela { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .busca { position: relative; display: block; }
+  .busca::before {
+    content: ''; position: absolute; left: 11px; top: 50%; width: 14px; height: 14px; transform: translateY(-50%);
+    background: currentColor; color: var(--texto-mudo); pointer-events: none;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center / contain no-repeat;
+            mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+  .busca input { width: min(340px, 72vw); padding-left: 34px; }
+  .filtro-grafico {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 14px;
+    background: var(--primaria-suave); color: var(--texto); border-radius: 999px;
+    padding: 4px 4px 4px 14px; font-size: 13px;
+  }
+  .filtro-grafico button { padding: 2px 10px; border-radius: 999px; font-size: 13px; }
+  .dica { font-size: 13px; color: var(--texto-mudo); margin: 12px 0 0; }
+  .tabela-wrap { overflow: auto; margin: 12px -20px 0; max-height: 640px; border-top: 1px solid var(--borda); }
+  table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 11px 14px; border-bottom: 1px solid var(--borda); }
+  th:first-child, td:first-child { padding-left: 20px; }
+  th:last-child, td:last-child { padding-right: 20px; }
+  th {
+    position: sticky; top: 0; z-index: 1; background: var(--superficie-2);
+    font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+    color: var(--texto-sec); white-space: nowrap;
+  }
+  tbody tr { transition: background .12s; }
+  tbody tr:hover { background: var(--linha-alt); }
+  tbody tr:last-child td { border-bottom: none; }
+  td.longo { min-width: 260px; max-width: 520px; white-space: normal; overflow-wrap: anywhere; color: var(--texto); }
+  td:not(.longo):not(.ts) { min-width: 120px; }
+  td.ts { white-space: nowrap; color: var(--texto-sec); font-variant-numeric: tabular-nums; }
+  td.vazio-tab { text-align: center; color: var(--texto-mudo); padding: 32px; }
+  .badge {
+    display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    background: var(--superficie-2); color: var(--texto-sec); border: 1px solid var(--borda); white-space: nowrap;
+  }
+  .badge.ok { background: var(--ok-suave); color: var(--ok); border-color: transparent; }
+  .paginacao { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 12px; font-size: 13px; color: var(--texto-sec); }
+  .paginacao button { width: 34px; height: 34px; padding: 0; }
+
+  /* ── Gráficos ── */
+  .grade { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grade.uma { grid-template-columns: 1fr; }
+  @media (max-width: 960px) { .grade { grid-template-columns: 1fr; } }
+  .fig {
+    margin: 0; background: var(--superficie); color: var(--texto);
+    border: 1px solid var(--borda); border-radius: 14px; box-shadow: var(--sombra);
+    padding: 18px 20px 14px; min-width: 0;
+  }
+  .fig h2 { font-size: 16px; }
+  .fig .sub { font-size: 13px; color: var(--texto-sec); margin: 3px 0 8px; }
+  .fig .fonte { font-size: 12px; color: var(--texto-mudo); margin: 8px 0 0; }
+  .fig .vazio { color: var(--texto-mudo); padding: 48px 0; text-align: center; }
+  .amostra { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin: 0 5px 0 2px; vertical-align: baseline; }
+  .grafico { width: 100%; height: 380px; }
+  .mt { margin-top: 14px; }
+
+  /* celular (fica no fim para vencer as regras acima) */
+  @media (max-width: 760px) {
+    .kpis { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .kpi { padding: 14px; }
+    .kpi b { font-size: 26px; }
+    .kpi-destaque { grid-column: 1 / -1; }
+    .card { padding: 16px; }
+    .tabela-wrap { margin: 12px -16px 0; }
+    .card-cab, .barra-tabela { width: 100%; }
+    .busca { flex: 1; }
+    .busca input { width: 100%; min-width: 0; }
+  }
 
   [hidden] { display: none !important; }
 
@@ -193,93 +334,139 @@
     box-shadow: 0 16px 48px rgba(30, 16, 70, .35);
     padding: 28px 24px 22px;
   }
-  body.login .topo h1 { font-size: 22px; margin-bottom: 20px; }
+  body.login .marca { flex-direction: column; gap: 10px; margin-bottom: 22px; }
+  body.login .logo { width: 44px; height: 44px; border-radius: 13px; font-size: 22px; }
+  body.login .topo h1 { font-size: 24px; }
+  body.login .marca-sub { display: none; }
   body.login .topo > .controles { display: block; }
   body.login #form-login { flex-direction: column; align-items: stretch; gap: 12px; }
   body.login #form-login .campo { text-align: left; color: var(--texto); }
   body.login #form-login input { width: 100%; min-width: 0; padding: 10px 12px; }
   body.login #form-login button { padding: 10px 14px; }
   body.login #btn-tema { display: none; }
-  body.login .status { margin-top: 14px; }
+  body.login .status { margin-top: 14px; color: var(--texto); }
 </style>
 </head>
 <body class="login">
 <canvas id="vfx" aria-hidden="true"></canvas>
 <div class="pagina">
   <header class="topo">
-  <div class="relogio" aria-live="off">
-    <span class="saudacao" id="rel-saudacao"></span>
-    <time class="hora" id="rel-hora"></time>
-    <span class="data" id="rel-data"></span>
-  </div>
-  <h1>Sentimentos</h1>
-
-  <div class="controles">
-    <form id="form-login" class="controles">
-      <label class="campo">Código de acesso
-        <input type="password" id="codigo" autocomplete="current-password" spellcheck="false" autofocus>
-      </label>
-      <button type="submit" id="btn-entrar" disabled>Entrar</button>
-    </form>
-    <div id="ctl-painel" class="controles" hidden>
-      <label class="campo">Período
-        <select id="sel-periodo">
-          <option>30 dias</option><option>90 dias</option><option selected>Tudo</option>
-        </select>
-      </label>
-      <label class="campo" id="ctl-pessoa" hidden><span id="lbl-pessoa">Filtrar por pessoa</span>
-        <select id="sel-pessoa"></select>
-      </label>
-      <button id="btn-atualizar">Atualizar dados</button>
-      <button id="btn-sair" class="secundario" title="Sair e esquecer o código neste computador">Sair</button>
+    <div class="relogio" aria-live="off">
+      <span class="saudacao" id="rel-saudacao"></span>
+      <time class="hora" id="rel-hora"></time>
+      <span class="data" id="rel-data"></span>
     </div>
-    <button id="btn-tema" class="secundario" title="Alternar tema claro/escuro">◐ Tema</button>
-  </div>
-  <p id="status" class="status" role="status">Carregando…</p>
+    <div class="marca">
+      <span class="logo" aria-hidden="true">S</span>
+      <div class="marca-txt">
+        <h1>Sentimentos</h1>
+        <p class="marca-sub" id="marca-sub" hidden></p>
+      </div>
+    </div>
+
+    <div class="controles">
+      <form id="form-login" class="controles">
+        <label class="campo">Código de acesso
+          <input type="password" id="codigo" autocomplete="current-password" spellcheck="false" autofocus>
+        </label>
+        <button type="submit" id="btn-entrar" disabled>Entrar</button>
+      </form>
+      <div id="ctl-painel" class="controles" hidden>
+        <div class="segmentado" role="radiogroup" aria-label="Período" id="sel-periodo">
+          <button type="button" role="radio" data-periodo="30 dias" aria-checked="false">30 dias</button>
+          <button type="button" role="radio" data-periodo="90 dias" aria-checked="false">90 dias</button>
+          <button type="button" role="radio" data-periodo="Tudo" aria-checked="true">Tudo</button>
+        </div>
+        <label class="campo" id="ctl-pessoa" hidden><span id="lbl-pessoa" class="sr">Filtrar por pessoa</span>
+          <select id="sel-pessoa"></select>
+        </label>
+        <button id="btn-atualizar" class="icone" title="Atualizar dados (reler as planilhas)" aria-label="Atualizar dados">⟳</button>
+        <button id="btn-sair" class="secundario" title="Sair e esquecer o código neste computador">Sair</button>
+      </div>
+      <button id="btn-tema" class="icone" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro">◐</button>
+    </div>
+    <p id="status" class="status" role="status">Carregando…</p>
   </header>
 
   <main id="painel" hidden>
-    <section class="kpis">
-      <div class="kpi"><b id="kpi-total">0</b><span>Total de registros</span><small class="var" id="kpi-var"></small></div>
+    <div class="secao-cab">
+      <h2>Visão geral</h2>
       <p class="escopo" id="escopo"></p>
+    </div>
+    <section class="kpis">
+      <article class="kpi kpi-destaque">
+        <span class="kpi-rot">Registros no período</span>
+        <b id="kpi-total">0</b>
+        <small class="var" id="kpi-var"></small>
+      </article>
+      <article class="kpi">
+        <span class="kpi-rot">Média por semana</span>
+        <b id="kpi-media">–</b>
+        <small class="var" id="kpi-media-sub"></small>
+      </article>
+      <article class="kpi">
+        <span class="kpi-rot" id="kpi-tipo-rot">Tipo de erro mais comum</span>
+        <b class="kpi-texto" id="kpi-tipo">–</b>
+        <small class="var" id="kpi-tipo-sub"></small>
+      </article>
+      <article class="kpi" id="kpi-elogio-card">
+        <span class="kpi-rot">Elogios</span>
+        <b id="kpi-elogios">0</b>
+        <small class="var" id="kpi-elogios-sub"></small>
+      </article>
+      <article class="kpi">
+        <span class="kpi-rot">Último registro</span>
+        <b class="kpi-texto" id="kpi-ultimo">–</b>
+        <small class="var" id="kpi-ultimo-sub"></small>
+      </article>
     </section>
 
-    <section id="bloco-master" hidden>
-      <div class="kpis">
-        <div class="kpi"><b id="ac-usuarios">0</b><span>Códigos usados hoje</span></div>
-        <div class="kpi"><b id="ac-hoje">0</b><span>Acessos hoje</span></div>
-        <div class="kpi"><b id="ac-semana">0</b><span>Acessos 7 dias</span></div>
-        <div class="kpi"><b id="ac-mes">0</b><span>Acessos 30 dias</span></div>
+    <details class="card acessos" id="bloco-master" hidden>
+      <summary><span>Acessos ao painel</span><span class="resumo" id="ac-resumo"></span></summary>
+      <div class="mini-stats">
+        <div><b id="ac-usuarios">0</b><span>códigos usados hoje</span></div>
+        <div><b id="ac-hoje">0</b><span>acessos hoje</span></div>
+        <div><b id="ac-semana">0</b><span>últimos 7 dias</span></div>
+        <div><b id="ac-mes">0</b><span>últimos 30 dias</span></div>
       </div>
       <p class="usuarios">Quem acessou hoje: <strong id="ac-lista">—</strong></p>
-      <p class="usuarios"><a id="link-permissoes" target="_blank" rel="noopener" hidden>Gerenciar códigos de acesso (planilha; abre só na conta dona)</a></p>
-    </section>
+      <p class="usuarios"><a id="link-permissoes" target="_blank" rel="noopener" hidden>Gerenciar códigos de acesso ↗ <small>(abre só na conta dona)</small></a></p>
+    </details>
 
-    <section class="card">
-      <h2>Registros</h2>
-      <div class="barra-tabela">
-        <input type="search" id="busca" placeholder="Buscar (nome, motivo, setor…)" aria-label="Buscar nos registros">
-        <button id="btn-exportar" class="secundario" title="Baixa os registros desta tabela (com filtros e busca) para abrir no Excel">⤓ Baixar para Excel</button>
+    <div class="secao-cab"><h2>Registros</h2></div>
+    <section class="card" style="margin-top:0">
+      <div class="card-cab">
+        <p class="card-sub" id="tabela-sub" style="margin:0"></p>
+        <div class="barra-tabela">
+          <label class="busca"><span class="sr">Buscar nos registros</span>
+            <input type="search" id="busca" placeholder="Buscar nome, motivo, setor…">
+          </label>
+          <button id="btn-exportar" class="secundario" title="Baixa os registros desta tabela (com filtros e busca) para abrir no Excel">⤓ Excel</button>
+        </div>
       </div>
       <div id="filtro-grafico" class="filtro-grafico" hidden>
-        <span>Filtro do gráfico: <strong id="filtro-rotulo"></strong></span>
-        <button id="btn-limpar-filtro" class="secundario" title="Remover este filtro">✕</button>
+        <span>Filtrado pelo gráfico: <strong id="filtro-rotulo"></strong></span>
+        <button id="btn-limpar-filtro" class="secundario" title="Remover este filtro" aria-label="Remover filtro">✕</button>
       </div>
-      <p class="dica" id="dica-grafico">Dica: clique num ponto, barra ou nome dos gráficos abaixo para ver só aqueles registros aqui.</p>
+      <p class="dica" id="dica-grafico">Dica: clique num ponto, barra ou nome nos gráficos abaixo para ver só aqueles registros aqui.</p>
       <div class="tabela-wrap">
         <table id="tabela"><thead></thead><tbody></tbody></table>
       </div>
       <div class="paginacao">
-        <button id="pg-ant" class="secundario">‹</button>
+        <button id="pg-ant" class="secundario" aria-label="Página anterior">‹</button>
         <span id="pg-info"></span>
-        <button id="pg-prox" class="secundario">›</button>
+        <button id="pg-prox" class="secundario" aria-label="Próxima página">›</button>
       </div>
     </section>
 
-    <div class="grade mt" id="grade">
+    <div class="secao-cab">
+      <h2>Análises</h2>
+      <span id="bloco-extras"><button id="btn-extras" class="link">Mais gráficos</button></span>
+    </div>
+    <div class="grade" id="grade">
       <figure class="fig">
         <h2 id="t-serie">Registros de equívocos por semana</h2>
-        <p class="sub">Nº de registros semanais, média móvel de 4 semanas e meta</p>
+        <p class="sub">Registros por semana, média móvel de 4 semanas e meta</p>
         <div class="grafico" id="ch-serie"></div>
         <p class="vazio" id="v-serie" hidden>Sem registros no período.</p>
         <p class="fonte" id="f-serie"></p>
@@ -293,25 +480,21 @@
       </figure>
     </div>
 
-    <div id="bloco-extras">
-      <button id="btn-extras" class="secundario mt">Mais gráficos</button>
-      <figure class="fig mt" id="card-dumbbell" hidden>
-        <h2>Comparativo dos dois tipos de erro mais frequentes</h2>
-        <p class="sub" id="sub-dumbbell"></p>
-        <div class="grafico" id="ch-dumbbell"></div>
-        <p class="vazio" id="v-dumbbell" hidden>É preciso ter pelo menos dois tipos de erro no período.</p>
-        <p class="fonte">Fonte: formulário interno de registro de equívocos.</p>
-      </figure>
-    </div>
+    <figure class="fig mt" id="card-dumbbell" hidden>
+      <h2>Comparativo dos dois tipos de erro mais frequentes</h2>
+      <p class="sub" id="sub-dumbbell"></p>
+      <div class="grafico" id="ch-dumbbell"></div>
+      <p class="vazio" id="v-dumbbell" hidden>É preciso ter pelo menos dois tipos de erro no período.</p>
+      <p class="fonte">Fonte: formulário interno de registro de equívocos.</p>
+    </figure>
 
     <figure class="fig mt">
       <h2 id="t-pessoas">Registros por pessoa (quem recebeu)</h2>
-      <p class="sub">Nº de registros no período selecionado</p>
+      <p class="sub">Número de registros no período selecionado</p>
       <div class="grafico" id="ch-pessoas"></div>
       <p class="vazio" id="v-pessoas" hidden>Sem registros no período.</p>
       <p class="fonte" id="f-pessoas"></p>
     </figure>
-
   </main>
 
 </div>
@@ -329,13 +512,10 @@ if (/\.github\.io$/.test(location.hostname) && window.top !== window.self) {
 // ══════════════════════════════════════════════════════════════
 // Estado e constantes
 // ══════════════════════════════════════════════════════════════
-const PEW = {
-  red: '#bf3927', blue: '#33607f', green: '#1a7a3c', gray: '#c9c9c9',
-  text: '#222222', sub: '#58585a', meta: '#8f1f10',
-  stack: ['#2f5d7c', '#7f9fb6', '#c5c5c5', '#d6766b', '#b0301f', '#8a9bab', '#e0a99f'],
-  roxo: '#762a83', verde: '#1b9e91',
-};
-const FONTE = 'Arial, Helvetica, sans-serif';
+// Cores dos gráficos: preenchidas por coresDoTema() a partir das variáveis CSS
+// (--ch-*, --s1…--s6), então acompanham o tema claro/escuro.
+const PEW = { stack: [] };
+const FONTE = '"Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif';
 const FONTE_EQ = 'Fonte: formulário interno de registro de equívocos.';
 const FONTE_SIC = 'Fonte: formulário de ocorrências SICASE (recepção).';
 const POR_PAGINA = 10;
@@ -363,13 +543,31 @@ const E = {
   filtroGrafico: null,   // { rotulo, teste(r) } vindo do clique num gráfico
 };
 
-// Cores dos gráficos que mudam com o tema: lidas das variáveis CSS (--fig-*)
 function coresDoTema() {
   const cs = getComputedStyle(document.documentElement);
   const v = (n) => cs.getPropertyValue(n).trim();
-  PEW.text = v('--fig-texto'); PEW.sub = v('--fig-sub'); PEW.fundo = v('--fig-bg');
-  PEW.grade = v('--fig-grade'); PEW.trilho = v('--fig-trilho');
-  PEW.meta = v('--fig-meta'); PEW.blue = v('--fig-azul'); PEW.roxo = v('--fig-roxo');
+  PEW.text = v('--ch-texto'); PEW.forte = v('--ch-forte'); PEW.fundo = v('--ch-fundo');
+  PEW.grade = v('--ch-grade'); PEW.meta = v('--ch-meta'); PEW.outros = v('--ch-outros');
+  PEW.ok = v('--ok'); PEW.erro = v('--erro');
+  PEW.stack = ['--s1', '--s2', '--s3', '--s4', '--s5', '--s6'].map(v);
+  PEW.s1 = PEW.stack[0]; PEW.s2 = PEW.stack[1];
+}
+
+// A cor segue o tipo de erro (ranking sobre TODOS os dados), não a posição
+// no período: trocar o filtro nunca repinta um tipo com outra cor.
+function rankearTipos() {
+  E.tiposTop = contar(E.dados.linhas.filter((r) => r.tipo_erro), 'tipo_erro')
+    .slice(0, MAX_TIPOS_STACK).map((x) => x[0]);
+}
+function corTipo(t) {
+  const i = (E.tiposTop || []).indexOf(t);
+  return i >= 0 ? PEW.stack[i] : PEW.outros;
+}
+// texto legível sobre um preenchimento (claro → tinta escura)
+function tintaSobre(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return lum > 0.6 ? '#14171c' : '#ffffff';
 }
 const charts = {};
 const $ = (id) => document.getElementById(id);
@@ -491,7 +689,10 @@ function sair(msg, erro) {
   Object.keys(charts).forEach((k) => { charts[k].dispose(); delete charts[k]; });
   E.filtradas = [];
   $('tabela').tBodies[0].textContent = '';
-  ['kpi-total', 'kpi-var', 'ac-usuarios', 'ac-hoje', 'ac-semana', 'ac-mes', 'ac-lista', 'escopo'].forEach((id) => { $(id).textContent = ''; });
+  ['kpi-total', 'kpi-var', 'kpi-media', 'kpi-media-sub', 'kpi-tipo', 'kpi-tipo-sub', 'kpi-elogios',
+   'kpi-elogios-sub', 'kpi-ultimo', 'kpi-ultimo-sub', 'ac-usuarios', 'ac-hoje', 'ac-semana', 'ac-mes',
+   'ac-lista', 'ac-resumo', 'escopo', 'marca-sub', 'tabela-sub'].forEach((id) => { $(id).textContent = ''; });
+  $('marca-sub').hidden = true;
   $('sel-pessoa').textContent = '';
   $('painel').hidden = true;
   $('ctl-painel').hidden = true;
@@ -516,12 +717,13 @@ async function carregarPainel(forcar, silencioso) {
   }
   btn.disabled = false;
   if (!E.codigo) return;   // saiu enquanto carregava
+  rankearTipos();
   montarPessoas();
   $('painel').hidden = false;
   render();
   const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   if (!silencioso) {
-    status(forcar ? 'Dados atualizados (' + hora + ')' : 'Acesso liberado: ' + E.dados.rotulo, E.dados.atualizadoEm);
+    status(forcar ? 'Atualizado às ' + hora + ' · ' + E.dados.atualizadoEm : E.dados.atualizadoEm);
   }
 }
 
@@ -540,7 +742,8 @@ function montarPessoas() {
   if (E.pessoa !== 'Todas' && nomes.indexOf(E.pessoa) < 0) E.pessoa = 'Todas';
   const sel = $('sel-pessoa');
   sel.textContent = '';
-  ['Todas'].concat(nomes).forEach((n) => sel.add(new Option(n, n)));
+  const todos = E.dados.tipo === 'sicase' ? 'Todos os recepcionistas' : 'Todas as pessoas';
+  ['Todas'].concat(nomes).forEach((n) => sel.add(new Option(n === 'Todas' ? todos : n, n)));
   sel.value = E.pessoa;
 }
 
@@ -566,10 +769,15 @@ function render() {
   $('kpi-total').textContent = L.length.toLocaleString('pt-BR');
   const esc = $('escopo');
   esc.textContent = '';
-  esc.append(sic ? 'Você está vendo: ' : 'Você está vendo equívocos ocorridos em: ');
+  esc.append(sic ? 'Você está vendo: ' : 'Equívocos ocorridos em: ');
   const st = document.createElement('strong');
-  st.textContent = sic ? D.rotulo : D.setores.join(' + ');
+  st.textContent = sic ? D.rotulo : (D.master ? 'todos os setores' : D.setores.join(' + '));
   esc.appendChild(st);
+  esc.append(' · ' + (E.periodo === 'Tudo' ? 'todo o histórico' : 'últimos ' + E.periodo));
+  const ms = $('marca-sub');
+  ms.hidden = false;
+  ms.textContent = sic ? D.rotulo : 'Registro de equívocos · ' + D.rotulo;
+  $('busca').placeholder = sic ? 'Buscar recepcionista, protocolo, guia…' : 'Buscar nome, motivo, setor…';
 
   $('bloco-master').hidden = !D.master;
   if (D.master && D.acessos) {
@@ -578,7 +786,9 @@ function render() {
     $('ac-semana').textContent = D.acessos.semana;
     $('ac-mes').textContent = D.acessos.mes;
     $('ac-lista').textContent = D.acessos.quemHoje.join(' · ') || '—';
+    $('ac-resumo').textContent = D.acessos.hoje + ' hoje · ' + D.acessos.semana + ' na semana';
   }
+  renderKpis(L);
   const lp = $('link-permissoes');
   // só aceita link de planilha do Google (nunca javascript: ou outro domínio)
   const linkOk = typeof D.linkConfig === 'string' && /^https:\/\/docs\.google\.com\/spreadsheets\//.test(D.linkConfig);
@@ -589,6 +799,7 @@ function render() {
   $('card-stack').hidden = sic;
   $('grade').classList.toggle('uma', sic);
   $('bloco-extras').hidden = sic;
+  $('card-dumbbell').hidden = sic || !E.extras;
   $('t-serie').textContent = sic ? 'Ocorrências SICASE por semana' : 'Registros de equívocos por semana';
   $('f-serie').textContent = sic ? FONTE_SIC : FONTE_EQ;
   $('t-pessoas').textContent = sic ? 'Ocorrências por recepcionista' : 'Registros por pessoa (quem recebeu)';
@@ -641,6 +852,51 @@ function renderComparacao() {
   if (varp > 0) el.classList.add('pior');
 }
 
+// ── Indicadores do topo ──
+function renderKpis(L) {
+  const sic = E.dados.tipo === 'sicase';
+  const pct = (n) => L.length ? Math.round(100 * n / L.length) + '% dos registros' : '';
+
+  // média semanal no período (Tudo: desde o primeiro registro)
+  let dias = E.periodo === '30 dias' ? 30 : E.periodo === '90 dias' ? 90 : 0;
+  if (!dias) {
+    const datas = L.map((r) => r.d).filter(Boolean).sort();
+    dias = datas.length ? Math.max(7, Math.round((hoje() - parseYmd(datas[0])) / 864e5) + 1) : 7;
+  }
+  const mediaSem = L.length / (dias / 7);
+  $('kpi-media').textContent = mediaSem.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+  $('kpi-media-sub').textContent = sic ? 'no período selecionado' : 'Meta de referência: ' + E.cfg.meta + ' por semana';
+
+  // mais comum: tipo de erro (equívocos) ou forma de emissão incorreta (SICASE)
+  const campo = sic ? 'como_emitida' : 'tipo_erro';
+  $('kpi-tipo-rot').textContent = sic ? 'Emissão incorreta mais comum' : 'Tipo de erro mais comum';
+  const top = contar(L.filter((r) => r[campo]), campo)[0];
+  $('kpi-tipo').textContent = top ? top[0] : '–';
+  $('kpi-tipo').title = top ? top[0] : '';
+  $('kpi-tipo-sub').textContent = top ? top[1].toLocaleString('pt-BR') + ' · ' + pct(top[1]) : 'sem registros';
+
+  // elogios (só no formulário de equívocos)
+  $('kpi-elogio-card').hidden = sic;
+  if (!sic) {
+    const n = L.filter((r) => /elogio/i.test(r.classificacao || '')).length;
+    $('kpi-elogios').textContent = n.toLocaleString('pt-BR');
+    $('kpi-elogios-sub').textContent = n ? pct(n) : 'nenhum no período';
+  }
+
+  // último registro
+  const ult = L.find((r) => r.d);
+  if (ult) {
+    const dd = Math.round((hoje() - parseYmd(ult.d)) / 864e5);
+    $('kpi-ultimo').textContent = dd <= 0 ? 'Hoje' : dd === 1 ? 'Ontem' : 'Há ' + dd + ' dias';
+    $('kpi-ultimo-sub').textContent = dataHora(ult.ts);
+  } else {
+    $('kpi-ultimo').textContent = '–';
+    $('kpi-ultimo-sub').textContent = '';
+  }
+}
+// "2026-11-12 10:00" → "12/11/2026 10:00"
+const dataHora = (ts) => ts ? ts.slice(8, 10) + '/' + ts.slice(5, 7) + '/' + ts.slice(0, 4) + ts.slice(10) : '';
+
 // ── Clique nos gráficos → filtra a tabela ──
 const acoesGrafico = {};   // nome → { clique(params), pixel(chart, [x, y]) }
 
@@ -687,20 +943,39 @@ window.addEventListener('resize', () => Object.values(charts).forEach((c) => c.r
 
 // ── Base comum dos gráficos ─────────────────────────────────────
 function base(extra) {
-  return Object.assign({
+  const dica = {
+    backgroundColor: PEW.fundo, borderColor: PEW.grade, borderWidth: 1, padding: [8, 12],
+    textStyle: { color: PEW.forte, fontSize: 13, fontFamily: FONTE },
+    extraCssText: 'border-radius:10px;box-shadow:0 8px 24px rgba(16,24,40,.14);',
+  };
+  const o = Object.assign({
     backgroundColor: 'transparent',
-    animationDuration: 400,
+    animationDuration: 450, animationEasing: 'cubicOut',
     textStyle: { fontFamily: FONTE, color: PEW.text },
   }, extra);
+  o.tooltip = Object.assign(dica, extra.tooltip || {});
+  if (o.legend) {
+    o.legend = Object.assign({
+      top: 0, left: 0, icon: 'roundRect', itemWidth: 12, itemHeight: 12, itemGap: 16,
+      textStyle: { fontSize: 12, color: PEW.text, fontFamily: FONTE },
+      inactiveColor: PEW.grade,
+    }, o.legend);
+  }
+  return o;
 }
 const eixoValor = () => ({
   type: 'value',
-  axisLabel: { fontSize: 13, color: PEW.text },
-  splitLine: { lineStyle: { type: 'dotted', color: PEW.grade } },
+  axisLabel: { fontSize: 12, color: PEW.text },
+  splitLine: { lineStyle: { color: PEW.grade, width: 1 } },
 });
+const eixoCategoria = (dados, extra) => Object.assign({
+  type: 'category', data: dados, axisTick: { show: false },
+  axisLine: { lineStyle: { color: PEW.grade } },
+  axisLabel: { fontSize: 12, color: PEW.text, hideOverlap: true },
+}, extra || {});
 const fmtNum = (v) => v == null ? '' : (+v).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 
-// ── Figura 1: registros/semana + média móvel + meta + variação % ──
+// ── Figura 1: registros/semana (barras) + média móvel (linha) + meta ──
 function opcaoSerie(L) {
   const cont = {};
   L.forEach((r) => { if (r.d) { const w = ymd(inicioSemana(r.d)); cont[w] = (cont[w] || 0) + 1; } });
@@ -712,9 +987,9 @@ function opcaoSerie(L) {
   const n = semanas.map((s) => cont[s] || 0);
   const mm = n.map((_, i) => media(n.slice(Math.max(0, i - 3), i + 1)));
   const meta = E.cfg.meta;
-  const ymax = Math.max(Math.max(...n), Math.max(...mm), meta) * 1.3;
+  const ymax = Math.max(Math.max(...n), Math.max(...mm), meta) * 1.25;
 
-  // rótulo de variação % da média móvel (só acima do limiar, como no Julia)
+  // variação % da média móvel: só os saltos acima do limiar ganham rótulo
   const mmItens = mm.map((v, i) => {
     const item = { value: +v.toFixed(2) };
     const prev = mm[i - 1];
@@ -722,19 +997,13 @@ function opcaoSerie(L) {
       const varp = 100 * (v - prev) / prev;
       if (Math.abs(varp) >= E.cfg.limiar) {
         item.label = {
-          show: true, position: 'top', fontSize: 14, fontWeight: 'bold',
-          color: varp < 0 ? PEW.green : PEW.red,
-          formatter: (varp > 0 ? '+' : '') + Math.round(varp) + '%',
+          show: true, position: 'top', fontSize: 12, fontWeight: 600,
+          color: varp < 0 ? PEW.ok : PEW.erro,
+          formatter: (varp > 0 ? '▲ +' : '▼ ') + Math.round(varp) + '%',
         };
       }
     }
     return item;
-  });
-
-  const linha = (cor, larg) => ({
-    type: 'line', symbol: 'circle', symbolSize: 10, color: cor,
-    lineStyle: { color: cor, width: larg },
-    itemStyle: { color: PEW.fundo, borderColor: cor, borderWidth: 2.5 },
   });
 
   const porSemana = (i) => {
@@ -750,31 +1019,32 @@ function opcaoSerie(L) {
       pixel: (c, px) => porSemana(c.convertFromPixel({ seriesIndex: 0 }, px)[0]),
     },
     opcao: base({
-      grid: { left: 8, right: 16, top: 44, bottom: 8, containLabel: true },
-      legend: {
-        top: 0, icon: 'rect', itemWidth: 14, itemHeight: 14, textStyle: { fontSize: 13, color: PEW.text },
-        data: [
-          { name: 'Registros/semana', itemStyle: { color: PEW.gray } },
-          { name: 'Média móvel 4 sem.', itemStyle: { color: PEW.red } },
-          { name: 'Meta', itemStyle: { color: PEW.meta } },
-        ],
+      grid: { left: 4, right: 12, top: 40, bottom: 4, containLabel: true },
+      legend: { data: ['Registros na semana', 'Média móvel (4 sem.)', 'Meta'] },
+      tooltip: {
+        trigger: 'axis', axisPointer: { type: 'line', lineStyle: { color: PEW.meta, type: 'dashed' } },
+        valueFormatter: fmtNum,
       },
-      tooltip: { trigger: 'axis', valueFormatter: fmtNum },
-      xAxis: {
-        type: 'category', data: semanas.map(ddmm), axisTick: { show: false },
-        axisLine: { lineStyle: { color: PEW.text } },
-        axisLabel: { fontSize: 13, color: PEW.text, hideOverlap: true },
-      },
+      xAxis: eixoCategoria(semanas.map(ddmm)),
       yAxis: Object.assign(eixoValor(), { min: 0, max: Math.ceil(ymax) }),
       series: [
-        Object.assign(linha(PEW.gray, 3.5), { name: 'Registros/semana', data: n }),
-        Object.assign(linha(PEW.red, 4.5), { name: 'Média móvel 4 sem.', data: mmItens, z: 3 }),
+        {
+          name: 'Registros na semana', type: 'bar', data: n, color: PEW.s1,
+          barMaxWidth: 14, itemStyle: { borderRadius: [4, 4, 0, 0], opacity: .85 },
+          emphasis: { itemStyle: { opacity: 1 } }, cursor: 'pointer',
+        },
+        {
+          name: 'Média móvel (4 sem.)', type: 'line', data: mmItens, color: PEW.s2, z: 3,
+          symbol: 'circle', symbolSize: 8, showSymbol: false, smooth: 0.25,
+          lineStyle: { width: 2.5 }, itemStyle: { borderColor: PEW.fundo, borderWidth: 2 },
+        },
         {
           name: 'Meta', type: 'line', data: [], color: PEW.meta,
+          lineStyle: { type: 'dashed' },
           markLine: {
             silent: true, symbol: 'none', data: [{ yAxis: meta }],
-            lineStyle: { color: PEW.meta, type: 'dashed', width: 2 },
-            label: { formatter: 'Meta: ' + meta, position: 'insideEndTop', color: PEW.meta, fontWeight: 'bold' },
+            lineStyle: { color: PEW.meta, type: 'dashed', width: 1.5 },
+            label: { formatter: 'Meta ' + meta, position: 'insideEndTop', color: PEW.text, fontSize: 12 },
           },
         },
       ],
@@ -788,25 +1058,27 @@ function opcaoStack(L) {
   if (!dm.length) return null;
   const meses = [...new Set(dm.map((r) => r.d.slice(0, 7)))].sort();
   // O formulário aceita múltipla escolha, o que gera dezenas de combinações.
-  // Mostra os MAX_TIPOS_STACK mais frequentes e agrupa o resto.
-  let tipos = contar(dm, 'tipo_erro').map((x) => x[0]);
-  const principais = new Set(tipos.slice(0, MAX_TIPOS_STACK));
-  if (tipos.length > MAX_TIPOS_STACK) tipos = tipos.slice(0, MAX_TIPOS_STACK).concat([OUTROS_TIPOS]);
+  // Mostra os tipos mais frequentes do histórico (cor fixa por tipo) e agrupa o resto.
+  const principais = new Set(E.tiposTop || []);
+  const presentes = new Set(dm.map((r) => r.tipo_erro));
+  let tipos = (E.tiposTop || []).filter((t) => presentes.has(t));
   const tipoDe = (r) => principais.has(r.tipo_erro) ? r.tipo_erro : OUTROS_TIPOS;
+  if (dm.some((r) => !principais.has(r.tipo_erro))) tipos = tipos.concat([OUTROS_TIPOS]);
   const tab = {};
   dm.forEach((r) => { const k = r.d.slice(0, 7) + '|' + tipoDe(r); tab[k] = (tab[k] || 0) + 1; });
   const totMes = {};
   dm.forEach((r) => { const m = r.d.slice(0, 7); totMes[m] = (totMes[m] || 0) + 1; });
 
-  const series = tipos.map((t, i) => {
-    const cor = t === OUTROS_TIPOS ? '#a89f91' : PEW.stack[i % PEW.stack.length];
-    const claro = cor === PEW.stack[2];
+  const series = tipos.map((t) => {
+    const cor = corTipo(t);
     return {
-      name: t, type: 'bar', stack: 'total', barWidth: '72%', color: cor,
+      name: t, type: 'bar', stack: 'total', barWidth: '64%', color: cor, cursor: 'pointer',
+      itemStyle: { borderColor: PEW.fundo, borderWidth: 1 },   // 2px de respiro entre segmentos
+      emphasis: { focus: 'series' },
       data: meses.map((m) => +(100 * (tab[m + '|' + t] || 0) / totMes[m]).toFixed(1)),
       label: {
-        show: true, fontSize: 12, color: claro ? '#222' : '#fff',
-        formatter: (p) => p.value >= 4 ? Math.round(p.value) : '',
+        show: true, fontSize: 11, fontWeight: 600, color: tintaSobre(cor),
+        formatter: (p) => p.value >= 7 ? Math.round(p.value) + '%' : '',
       },
     };
   });
@@ -821,21 +1093,20 @@ function opcaoStack(L) {
   };
 
   return {
-    altura: 480,
+    altura: 440,
     acoes: {
       clique: (p) => { if (p.componentType === 'series') porMes(p.dataIndex, p.seriesName); },
       pixel: (c, px) => porMes(c.convertFromPixel({ seriesIndex: 0 }, px)[0]),
     },
     opcao: base({
-      grid: { left: 8, right: 8, top: 96, bottom: 8, containLabel: true },
-      legend: { type: 'plain', top: 0, left: 0, right: 0, icon: 'rect', itemWidth: 14, itemHeight: 14,
-                itemGap: 12, textStyle: { fontSize: 13, color: PEW.text } },   // quebra em várias linhas
-      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, valueFormatter: (v) => fmtNum(v) + '%' },
-      xAxis: {
-        type: 'category', data: meses.map(mmaa), axisTick: { show: false },
+      grid: { left: 4, right: 4, top: 84, bottom: 4, containLabel: true },
+      legend: { type: 'plain', right: 0, itemGap: 12 },   // quebra em várias linhas
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(127,127,127,.08)' } },
+                 valueFormatter: (v) => fmtNum(v) + '%' },
+      xAxis: eixoCategoria(meses.map(mmaa), {
         axisLine: { show: false },
-        axisLabel: { fontSize: 13, color: PEW.text, rotate: meses.length > 8 ? 45 : 0 },
-      },
+        axisLabel: { fontSize: 12, color: PEW.text, rotate: meses.length > 8 ? 45 : 0 },
+      }),
       yAxis: { type: 'value', max: 100, show: false },
       series: series,
     }),
@@ -843,14 +1114,21 @@ function opcaoStack(L) {
 }
 
 // ── Figura 2b: dumbbell mensal dos dois tipos mais frequentes ──
+function coresDumbbell(tA, tB) {
+  let a = corTipo(tA), b = corTipo(tB);
+  if (a === b) { a = PEW.s1; b = PEW.s2; }   // ambos fora do top: cores distintas
+  return [a, b];
+}
 function desenharDumbbell(L) {
   const res = opcaoDumbbell(L);
   const sub = $('sub-dumbbell');
   sub.textContent = '';
   if (res) {
-    const a = document.createElement('b'); a.style.color = PEW.roxo; a.textContent = res.tA;
-    const b = document.createElement('b'); b.style.color = PEW.verde; b.textContent = res.tB;
-    sub.append(a, ' e ', b, ' — nº de registros por mês');
+    const [ca, cb] = coresDumbbell(res.tA, res.tB);
+    const amostra = (cor) => { const s = document.createElement('span'); s.className = 'amostra'; s.style.background = cor; return s; };
+    const a = document.createElement('strong'); a.textContent = res.tA;
+    const b = document.createElement('strong'); b.textContent = res.tB;
+    sub.append(amostra(ca), a, '  e ', amostra(cb), b, ' — registros por mês, com média e faixa de ±1 desvio');
   }
   desenhar('dumbbell', res);
 }
@@ -860,6 +1138,7 @@ function opcaoDumbbell(L) {
   const tipos = contar(dm, 'tipo_erro').map((x) => x[0]);
   if (tipos.length < 2) return null;
   const tA = tipos[0], tB = tipos[1];
+  const [cA, cB] = coresDumbbell(tA, tB);
   const meses = [...new Set(dm.map((r) => r.d.slice(0, 7)))].sort();
   const tab = {};
   dm.forEach((r) => { const k = r.d.slice(0, 7) + '|' + r.tipo_erro; tab[k] = (tab[k] || 0) + 1; });
@@ -876,7 +1155,7 @@ function opcaoDumbbell(L) {
   const linhaMedia = (m, cor) => ({
     silent: true, symbol: 'none', data: [{ xAxis: +m.toFixed(2) }],
     lineStyle: { color: cor, width: 1.5, type: 'solid' },
-    label: { formatter: 'MÉDIA', position: 'end', color: cor, fontSize: 11 },
+    label: { formatter: 'média', position: 'end', color: PEW.text, fontSize: 11 },
   });
 
   const porMesTipo = (i, tipo) => {
@@ -896,21 +1175,19 @@ function opcaoDumbbell(L) {
       pixel: (c, px) => porMesTipo(c.convertFromPixel({ seriesIndex: 1 }, px)[1]),
     },
     opcao: base({
-      grid: { left: 8, right: 24, top: 28, bottom: 8, containLabel: true },
+      grid: { left: 4, right: 28, top: 24, bottom: 4, containLabel: true },
       tooltip: {
         trigger: 'axis', axisPointer: { type: 'none' },
         formatter: (ps) => {
           const i = ps[0].dataIndex;
-          return mmaa(meses[i]) + '<br>' + esc(tA) + ': <b>' + xA[i] + '</b><br>' + esc(tB) + ': <b>' + xB[i] + '</b>';
+          const dot = (c) => '<span style="display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;background:' + c + '"></span>';
+          return '<b>' + mmaa(meses[i]) + '</b><br>' + dot(cA) + esc(tA) + ': <b>' + xA[i] + '</b><br>' +
+            dot(cB) + esc(tB) + ': <b>' + xB[i] + '</b>';
         },
       },
       xAxis: Object.assign(eixoValor(), { min: 0, max: Math.ceil(xmax * 1.12), splitLine: { show: false },
-        axisLine: { show: true, lineStyle: { color: PEW.text } } }),
-      yAxis: {
-        type: 'category', inverse: true, data: meses.map(mmaa),
-        axisTick: { show: false }, axisLine: { show: false },
-        axisLabel: { fontSize: 13, color: PEW.text },
-      },
+        axisLine: { show: true, lineStyle: { color: PEW.grade } } }),
+      yAxis: eixoCategoria(meses.map(mmaa), { inverse: true, axisLine: { show: false } }),
       series: [
         {
           type: 'custom', silent: true, z: 1,
@@ -922,23 +1199,25 @@ function opcaoDumbbell(L) {
             return {
               type: 'group', children: [
                 { type: 'line', shape: { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1] },
-                  style: { stroke: PEW.trilho, lineWidth: 10, lineCap: 'round' } },
+                  style: { stroke: PEW.grade, lineWidth: 8, lineCap: 'round' } },
                 { type: 'text', style: {
-                  text: 'Δ ' + api.value(3), x: (p1[0] + p2[0]) / 2, y: p1[1] - 9,
-                  align: 'center', verticalAlign: 'bottom', fill: PEW.sub, font: '12px ' + FONTE } },
+                  text: 'Δ ' + api.value(3), x: (p1[0] + p2[0]) / 2, y: p1[1] - 8,
+                  align: 'center', verticalAlign: 'bottom', fill: PEW.text, font: '11px ' + FONTE } },
               ],
             };
           },
         },
         {
-          name: tA, type: 'scatter', symbolSize: 16, color: PEW.roxo, z: 3, clip: false,
+          name: tA, type: 'scatter', symbolSize: 13, color: cA, z: 3, clip: false, cursor: 'pointer',
+          itemStyle: { borderColor: PEW.fundo, borderWidth: 2 },
           data: xA.map((v, i) => [v, i]),
-          markArea: faixa(mA, sA, PEW.roxo, 0.07), markLine: linhaMedia(mA, PEW.roxo),
+          markArea: faixa(mA, sA, cA, 0.08), markLine: linhaMedia(mA, cA),
         },
         {
-          name: tB, type: 'scatter', symbolSize: 16, color: PEW.verde, z: 3, clip: false,
+          name: tB, type: 'scatter', symbolSize: 13, color: cB, z: 3, clip: false, cursor: 'pointer',
+          itemStyle: { borderColor: PEW.fundo, borderWidth: 2 },
           data: xB.map((v, i) => [v, i]),
-          markArea: faixa(mB, sB, PEW.verde, 0.08), markLine: linhaMedia(mB, PEW.verde),
+          markArea: faixa(mB, sB, cB, 0.08), markLine: linhaMedia(mB, cB),
         },
       ],
     }),
@@ -956,7 +1235,7 @@ function opcaoPessoas(L) {
     filtrarPorGrafico(rotuloPessoa + nome, (r) => r.nome === nome);
   };
   return {
-    altura: Math.min(Math.max(40 + 24 * cp.length, 200), 2400),
+    altura: Math.min(Math.max(32 + 28 * cp.length, 200), 2600),
     acoes: {
       clique: (p) => {
         if (p.componentType === 'series') porPessoa(p.name);
@@ -965,18 +1244,20 @@ function opcaoPessoas(L) {
       pixel: (c, px) => { const i = c.convertFromPixel({ seriesIndex: 0 }, px)[1]; if (cp[i]) porPessoa(cp[i][0]); },
     },
     opcao: base({
-      grid: { left: 8, right: 40, top: 8, bottom: 8, containLabel: true },
-      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-      xAxis: { type: 'value', show: false, max: Math.ceil(max * 1.15) },
+      grid: { left: 4, right: 44, top: 4, bottom: 4, containLabel: true },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(127,127,127,.08)' } } },
+      xAxis: { type: 'value', show: false, max: Math.ceil(max * 1.12) },
       yAxis: {
         type: 'category', inverse: true, data: cp.map((x) => x[0]), triggerEvent: true,
         axisTick: { show: false }, axisLine: { show: false },
-        axisLabel: { fontSize: 13, color: PEW.text, interval: 0 },   // todos os nomes
+        axisLabel: { fontSize: 13, color: PEW.forte, interval: 0, margin: 12 },   // todos os nomes
       },
       series: [{
-        name: 'Registros', type: 'bar', barWidth: '62%', color: PEW.blue,
+        name: 'Registros', type: 'bar', barMaxWidth: 16, color: PEW.s1, cursor: 'pointer',
+        itemStyle: { borderRadius: [0, 4, 4, 0] },
+        showBackground: true, backgroundStyle: { color: PEW.grade, borderRadius: [0, 4, 4, 0], opacity: .45 },
         data: cp.map((x) => x[1]),
-        label: { show: true, position: 'right', fontWeight: 'bold', fontSize: 14, color: PEW.text },
+        label: { show: true, position: 'right', fontWeight: 600, fontSize: 12, color: PEW.forte },
       }],
     }),
   };
@@ -1034,6 +1315,9 @@ function renderTabela() {
   $('dica-grafico').hidden = !!fg;
   $('filtro-rotulo').textContent = fg ? fg.rotulo : '';
   $('btn-exportar').disabled = !linhas.length;
+  const n = linhas.length.toLocaleString('pt-BR');
+  $('tabela-sub').textContent = linhas.length === 1 ? '1 registro' : n + ' registros' +
+    (fg || E.busca ? ' (filtrados)' : '') + ' · mais recentes primeiro';
 
   const paginas = Math.max(1, Math.ceil(linhas.length / POR_PAGINA));
   E.pagina = Math.min(E.pagina, paginas - 1);
@@ -1045,14 +1329,24 @@ function renderTabela() {
     const tr = tbody.insertRow();
     cols.forEach((c) => {
       const td = tr.insertCell();
-      td.textContent = r[c[0]] || '';   // textContent: conteúdo do formulário nunca vira HTML
+      const v = r[c[0]] || '';
       if (c[2]) td.className = c[2];
+      // textContent sempre: conteúdo do formulário nunca vira HTML
+      if (c[0] === 'classificacao' && v) {
+        const b = document.createElement('span');
+        b.className = 'badge' + (/elogio/i.test(v) ? ' ok' : '');
+        b.textContent = v;
+        td.appendChild(b);
+      } else {
+        td.textContent = c[0] === 'ts' ? dataHora(v) : v;
+      }
     });
   });
   if (!linhas.length) {
     const td = tbody.insertRow().insertCell();
     td.colSpan = cols.length;
-    td.textContent = 'Nenhum registro encontrado.';
+    td.className = 'vazio-tab';
+    td.textContent = 'Nenhum registro encontrado com esses filtros.';
   }
 
   $('pg-info').textContent = linhas.length
@@ -1246,7 +1540,29 @@ VFX.iniciar();
 // ══════════════════════════════════════════════════════════════
 $('form-login').addEventListener('submit', (ev) => { ev.preventDefault(); entrar($('codigo').value); });
 $('btn-sair').addEventListener('click', () => sair());
-$('sel-periodo').addEventListener('change', (ev) => { E.periodo = ev.target.value; render(); });
+// controle segmentado de período (setas do teclado também trocam)
+function escolherPeriodo(p) {
+  E.periodo = p;
+  document.querySelectorAll('#sel-periodo button').forEach((b) => {
+    const sel = b.dataset.periodo === p;
+    b.setAttribute('aria-checked', sel ? 'true' : 'false');
+    b.tabIndex = sel ? 0 : -1;
+  });
+  if (E.dados) render();
+}
+$('sel-periodo').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button[data-periodo]');
+  if (b) escolherPeriodo(b.dataset.periodo);
+});
+$('sel-periodo').addEventListener('keydown', (ev) => {
+  if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+  const bs = [...document.querySelectorAll('#sel-periodo button')];
+  const i = bs.findIndex((b) => b.dataset.periodo === E.periodo);
+  const j = (i + (ev.key === 'ArrowRight' ? 1 : -1) + bs.length) % bs.length;
+  escolherPeriodo(bs[j].dataset.periodo);
+  bs[j].focus();
+});
+escolherPeriodo(E.periodo);
 $('sel-pessoa').addEventListener('change', (ev) => { E.pessoa = ev.target.value; render(); });
 $('btn-atualizar').addEventListener('click', () => carregarPainel(true, false));
 
